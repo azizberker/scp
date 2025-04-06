@@ -20,7 +20,7 @@ public class FirstPersonControllerCustom : MonoBehaviour
     // Gravity & Jump
     private float gravity = -30f;
     private Vector3 velocity;
-    [SerializeField] private float jumpHeight = 1.2f;
+    [SerializeField] private float jumpHeight = 0.6f;
 
     private bool isGrounded;
 
