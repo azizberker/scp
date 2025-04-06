@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class Collectable : Targetable
 {
+    public float collectionRange = 3f;
     public virtual void Collect()
     {
         Destroy(gameObject);    

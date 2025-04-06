@@ -19,35 +19,50 @@ public class RaycastAction : MonoBehaviour
     void Update()
     {
         ray = cam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
-        if(Physics.Raycast(ray,out hit, 100))
+        if (Physics.Raycast(ray, out hit, 100))
         {
-          if(hit.collider.TryGetComponent(out Targetable targetable))
+            if (hit.collider.TryGetComponent(out Targetable targetable))
             {
-                currentTargetable = targetable;
-                currentTargetable.ToggleHighlight(true);
-                if(currentTargetable.TryGetComponent(out Collectable collectable))
+                if (currentTargetable != targetable)
                 {
-                    currentCollectable = collectable;
+                    if (currentTargetable != null)
+                        currentTargetable.ToggleHighlight(false);
+
+                    currentTargetable = targetable;
+                    currentTargetable.ToggleHighlight(true);
+
+                    if (currentTargetable.TryGetComponent(out Collectable collectable))
+                    {
+                        currentCollectable = collectable;
+                    }
+                    else
+                    {
+                        currentCollectable = null;
+                    }
                 }
             }
-          else if (currentTargetable)
+            else if (currentTargetable)
             {
                 currentTargetable.ToggleHighlight(false);
                 currentTargetable = null;
-                if (currentCollectable)
+                currentCollectable = null;
+            }
+        }
+
+        if (Input.GetMouseButtonDown(0))
+        {
+            if (currentCollectable != null)
+            {
+                float distance = Vector3.Distance(cam.transform.position, currentCollectable.transform.position);
+                if (distance <= currentCollectable.collectionRange)
                 {
+                    currentCollectable.Collect();
                     currentCollectable = null;
                 }
-            }
-
-
-        } 
-        if(Input.GetMouseButtonDown(0))
-        {
-            if (currentCollectable)
-            {
-                currentCollectable.Collect();
-                currentCollectable = null;
+                else
+                {
+                    Debug.Log("Too far to collect!");
+                }
             }
         }
     }
