@@ -4,7 +4,7 @@ using UnityEngine.AI;
 public class EnemyAI : MonoBehaviour
 {
     public Transform player; // oyuncunun transformu
-    public float chaseRange = 15f; // kovalama mesafesi
+    public float chaseRange = 10f; // kovalama mesafesi
     public float attackRange = 2f; // saldýrma mesafesi
     public float moveSpeed = 3.5f; // düþmanýn hareket hýzý
     public float attackCooldown = 1f; // saldýrý sýklýðý (saniye)
@@ -49,7 +49,7 @@ public class EnemyAI : MonoBehaviour
             PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
             if (playerHealth != null)
             {
-                playerHealth.TakeDamage(10); // hasar miktarý
+                playerHealth.TakeDamage(100); // hasar miktarý
                 Debug.Log("Enemy saldýrdý!");
             }
         }
