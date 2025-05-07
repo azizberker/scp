@@ -1,23 +1,30 @@
 using UnityEngine;
 
-[RequireComponent(typeof(Animator))]
 public class DoorController : MonoBehaviour
 {
-    [SerializeField] private string parameterName = "Open";
-    private Animator animator;
     private bool isOpen = false;
+    private Quaternion closedRotation;
+    private Quaternion openRotation;
 
-    void Awake()
+    [SerializeField] private float openAngle = 90f;
+    [SerializeField] private float rotationSpeed = 2f;
+
+    void Start()
     {
-        animator = GetComponent<Animator>();
+        // Dönüþleri baþlangýçta hesapla
+        closedRotation = transform.rotation;
+        openRotation = Quaternion.Euler(0, transform.eulerAngles.y + openAngle, 0);
+    }
+
+    public void ToggleDoor()
+    {
+        isOpen = !isOpen;
     }
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.E))
-        {
-            isOpen = !isOpen;
-            animator.SetBool(parameterName, isOpen);
-        }
+        // Hedef dönüþü belirle
+        Quaternion targetRotation = isOpen ? openRotation : closedRotation;
+        transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
     }
 }
