@@ -1,67 +1,126 @@
 using UnityEngine;
 using UnityEngine.AI;
+using System.Collections;
 
 public class EnemyAI : MonoBehaviour
 {
-    public Transform player; // oyuncunun transformu
-    public float chaseRange = 10f; // kovalama mesafesi
-    public float attackRange = 2f; // saldýrma mesafesi
-    public float moveSpeed = 3.5f; // düþmanýn hareket hýzý
-    public float attackCooldown = 1f; // saldýrý sýklýðý (saniye)
-    private float lastAttackTime = 0f;
+    [Header("Patrol Points")]
+    public Transform[] patrolPoints;
+    private int currentPatrolIndex = 0;
+
+    [Header("Target & Ranges")]
+    public Transform player;
+    public float chaseRange = 10f;
+    public float attackRange = 2f;
+
+    [Header("Speeds")]
+    public float walkSpeed = 2f;
+    public float runSpeed = 5f;
+
+    [Header("Attack")]
+    public float attackCooldown = 1f;
+    public float attackHitDelay = 0.5f;
+    private bool alreadyAttacked;
 
     private NavMeshAgent agent;
+    private Animator animator;
+    private string currentState = "";
 
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
-        agent.speed = moveSpeed;
+        animator = GetComponent<Animator>();
+
+        // Player otomatik bulma
+        if (player == null)
+        {
+            var p = GameObject.FindGameObjectWithTag("Player");
+            if (p) player = p.transform;
+        }
+
+        agent.speed = walkSpeed;
+        if (patrolPoints.Length > 0) GotoNextPoint();
     }
 
     void Update()
     {
-        float distance = Vector3.Distance(transform.position, player.position);
+        if (player == null) return;
 
-        if (distance <= chaseRange && distance > attackRange)
-        {
-            // Oyuncuyu kovala
-            agent.isStopped = false;
-            agent.SetDestination(player.position);
-        }
-        else if (distance <= attackRange)
-        {
-            // Oyuncuya saldýr
+        float dist = Vector3.Distance(transform.position, player.position);
+
+        if (dist <= attackRange)
             Attack();
-        }
+        else if (dist <= chaseRange)
+            Chase();
+        else if (patrolPoints.Length > 0)
+            Patrol();
         else
-        {
-            // Durdur
-            agent.isStopped = true;
-        }
+            Idle();
+    }
+
+    void Idle()
+    {
+        agent.isStopped = true;
+        SafePlay("Idle");
+    }
+
+    void Patrol()
+    {
+        agent.isStopped = false;
+        agent.speed = walkSpeed;
+        SafePlay("Walk");
+
+        if (!agent.pathPending && agent.remainingDistance < 0.5f)
+            GotoNextPoint();
+    }
+
+    void Chase()
+    {
+        agent.isStopped = false;
+        agent.speed = runSpeed;
+        agent.SetDestination(player.position);
+        SafePlay("Run");
     }
 
     void Attack()
     {
-        if (Time.time - lastAttackTime >= attackCooldown)
-        {
-            lastAttackTime = Time.time;
+        agent.isStopped = true;
+        SafePlay("Attack");
 
-            PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
-            if (playerHealth != null)
-            {
-                playerHealth.TakeDamage(100); // hasar miktarý
-                Debug.Log("Enemy saldýrdý!");
-            }
+        if (alreadyAttacked) return;
+        alreadyAttacked = true;
+        StartCoroutine(ResetAttack());
+        StartCoroutine(DealDamageWithDelay());
+    }
+
+    IEnumerator ResetAttack()
+    {
+        yield return new WaitForSeconds(attackCooldown);
+        alreadyAttacked = false;
+    }
+
+    IEnumerator DealDamageWithDelay()
+    {
+        yield return new WaitForSeconds(attackHitDelay);
+        if (player == null) yield break;
+        if (Vector3.Distance(transform.position, player.position) <= attackRange + 0.5f)
+        {
+            var ph = player.GetComponent<PlayerHealth>();
+            if (ph != null) ph.TakeDamage(10);
         }
     }
 
-    // Kovalamaya ve saldýrýya ne kadar yaklaþtýðýný sahnede görsel olarak görmek için:
-    void OnDrawGizmosSelected()
+    void GotoNextPoint()
     {
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, chaseRange);
+        agent.destination = patrolPoints[currentPatrolIndex].position;
+        currentPatrolIndex = (currentPatrolIndex + 1) % patrolPoints.Length;
+    }
 
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, attackRange);
+    // Sadece yeni state farklýysa oynatýr
+    void SafePlay(string stateName)
+    {
+        if (currentState == stateName) return;
+        animator.Play(stateName);
+        currentState = stateName;
     }
 }
