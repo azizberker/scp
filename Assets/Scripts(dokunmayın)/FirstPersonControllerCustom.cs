@@ -8,13 +8,13 @@ public class FirstPersonControllerCustom : MonoBehaviour
     private Camera cam;
     private bool isRunning;
     private float defaultFOV;
-    private float sprintFOV = 80f; // Sprint sırasında FOV
-    private float fovTransitionTime = 0.25f; // FOV değişim süresi
+    private float sprintFOV = 67f; // Sprint sırasında FOV
+    private float fovTransitionTime = 0.35f; // FOV değişim süresi
 
     // Movement
     private CharacterController characterController;
-    public float walkSpeed = 3f;
-    public float sprintSpeed = 6f;
+    public float walkSpeed = 0.5f;
+    public float sprintSpeed = 3f;
     private float speed;
 
     // Gravity & Jump
