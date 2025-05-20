@@ -1,15 +1,10 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class Collectable : Targetable
+public class Collectable : MonoBehaviour
 {
-    public float collectionRange = 3f;
     public virtual void Collect()
     {
-        Destroy(gameObject);    
+        Debug.Log("Collect çaðrýldý ve obje yok edildi: " + gameObject.name);
+        Destroy(gameObject);
     }
-
 }
-
-

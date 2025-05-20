@@ -1,6 +1,4 @@
-using System.Collections.Generic;
 using UnityEngine;
-
 
 public class Item : Collectable
 {
@@ -8,10 +6,8 @@ public class Item : Collectable
 
     public override void Collect()
     {
-        Inventory.Instance.AddItem(data);
-        Debug.Log($"{data.itemName} collected! Value: {data.itemValue}");
+        Debug.Log($"{data.itemName} toplandý!");
+        HotbarManager.Instance.AddItemToHotbar(data); // Hotbara ekle
         base.Collect();
     }
 }
-
-
