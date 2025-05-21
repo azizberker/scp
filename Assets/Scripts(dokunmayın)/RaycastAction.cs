@@ -5,7 +5,7 @@ public class RaycastAction : MonoBehaviour
     private Camera cam;
     private Ray ray;
     private RaycastHit hit;
-    public LayerMask interactMask; // Inspector’dan sadece Item layer’ý seçili olacak
+    public LayerMask interactMask; // Inspector'dan hem "Item" hem "Door" iþaretli olacak
 
     void Start()
     {
@@ -19,8 +19,16 @@ public class RaycastAction : MonoBehaviour
         {
             if (Input.GetKeyDown(KeyCode.E))
             {
+                // Önce kapý kontrolü
+                if (hit.collider.TryGetComponent<DoorController>(out var door))
+                {
+                    Debug.Log("Kapý bulundu! Açma/Kapama çalýþtý.");
+                    door.ToggleDoor();
+                }
+                // Sonra Collectable (item) kontrolü
                 if (hit.collider.TryGetComponent<Collectable>(out var collectable))
                 {
+                    Debug.Log("Collectable bulundu! Toplama çalýþtý.");
                     collectable.Collect();
                 }
             }
