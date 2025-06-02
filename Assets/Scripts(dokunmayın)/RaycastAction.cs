@@ -5,7 +5,9 @@ public class RaycastAction : MonoBehaviour
     private Camera cam;
     private Ray ray;
     private RaycastHit hit;
-    public LayerMask interactMask; // Inspector'dan hem "Item" hem "Door" iþaretli olacak
+    public LayerMask interactMask; // Door ve/veya Item layer'larÄ± seÃ§ili olmalÄ±
+
+    private DoorController lastDoor = null;
 
     void Start()
     {
@@ -17,20 +19,35 @@ public class RaycastAction : MonoBehaviour
         ray = cam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
         if (Physics.Raycast(ray, out hit, 3f, interactMask))
         {
-            if (Input.GetKeyDown(KeyCode.E))
+            // Sadece kapÄ±ya bakÄ±yorsan:
+            if (hit.collider.TryGetComponent<DoorController>(out var door))
             {
-                // Önce kapý kontrolü
-                if (hit.collider.TryGetComponent<DoorController>(out var door))
+                door.ShowIcon(true);
+
+                if (lastDoor != null && lastDoor != door)
+                    lastDoor.ShowIcon(false);
+                lastDoor = door;
+
+                if (Input.GetKeyDown(KeyCode.E))
                 {
-                    Debug.Log("Kapý bulundu! Açma/Kapama çalýþtý.");
                     door.ToggleDoor();
                 }
-                // Sonra Collectable (item) kontrolü
-                if (hit.collider.TryGetComponent<Collectable>(out var collectable))
+            }
+            else
+            {
+                if (lastDoor != null)
                 {
-                    Debug.Log("Collectable bulundu! Toplama çalýþtý.");
-                    collectable.Collect();
+                    lastDoor.ShowIcon(false);
+                    lastDoor = null;
                 }
+            }
+        }
+        else
+        {
+            if (lastDoor != null)
+            {
+                lastDoor.ShowIcon(false);
+                lastDoor = null;
             }
         }
     }

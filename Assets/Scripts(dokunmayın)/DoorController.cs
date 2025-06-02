@@ -2,18 +2,21 @@ using UnityEngine;
 
 public class DoorController : MonoBehaviour
 {
+    public GameObject interactionIcon; // World Space Canvas veya sadece Image objesi
+
     private bool isOpen = false;
-    private Quaternion closedRotation;
-    private Quaternion openRotation;
+    private float openAngle = 90f;
+    private float closedAngle = 0f;
+    private float speed = 5f;
 
-    [SerializeField] private float openAngle = 90f;
-    [SerializeField] private float rotationSpeed = 2f;
-
-    void Start()
+    private void Update()
     {
-        // Dönüþleri baþlangýçta hesapla
-        closedRotation = transform.rotation;
-        openRotation = Quaternion.Euler(0, transform.eulerAngles.y + openAngle, 0);
+        float targetAngle = isOpen ? openAngle : closedAngle;
+        transform.localRotation = Quaternion.Lerp(
+            transform.localRotation,
+            Quaternion.Euler(0, targetAngle, 0),
+            Time.deltaTime * speed
+        );
     }
 
     public void ToggleDoor()
@@ -21,10 +24,10 @@ public class DoorController : MonoBehaviour
         isOpen = !isOpen;
     }
 
-    void Update()
+    public void ShowIcon(bool show)
     {
-        // Hedef dönüþü belirle
-        Quaternion targetRotation = isOpen ? openRotation : closedRotation;
-        transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
+        if (interactionIcon != null)
+            interactionIcon.SetActive(show);
     }
 }
+
