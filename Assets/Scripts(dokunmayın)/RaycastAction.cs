@@ -1,17 +1,23 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 public class RaycastAction : MonoBehaviour
 {
     private Camera cam;
     private Ray ray;
     private RaycastHit hit;
-    public LayerMask interactMask; // Door ve/veya Item layer'ları seçili olmalı
 
-    private DoorController lastDoor = null;
+    [Tooltip("Kapı ve item layer’larını işaretleyin.")]
+    public LayerMask interactMask;
+
+    [Header("E Prompt (Screen UI)")]
+    public Image collectPrompt; // Canvas>CollectPrompt Image’ını buraya ata
 
     void Start()
     {
         cam = Camera.main;
+        if (collectPrompt != null)
+            collectPrompt.enabled = false;
     }
 
     void Update()
@@ -19,36 +25,30 @@ public class RaycastAction : MonoBehaviour
         ray = cam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
         if (Physics.Raycast(ray, out hit, 3f, interactMask))
         {
-            // Sadece kapıya bakıyorsan:
+            // 1) Kapı açma
             if (hit.collider.TryGetComponent<DoorController>(out var door))
             {
-                door.ShowIcon(true);
+                // (World-space icon için zaten ayrı script çalışıyor)
+                if (Input.GetKeyDown(KeyCode.E))
+                    door.ToggleDoor();
+            }
 
-                if (lastDoor != null && lastDoor != door)
-                    lastDoor.ShowIcon(false);
-                lastDoor = door;
+            // 2) Collectable (fener) kontrolü
+            if (hit.collider.TryGetComponent<Collectable>(out var collectable))
+            {
+                // ekranda prompt göster
+                if (collectPrompt != null)
+                    collectPrompt.enabled = true;
 
                 if (Input.GetKeyDown(KeyCode.E))
-                {
-                    door.ToggleDoor();
-                }
-            }
-            else
-            {
-                if (lastDoor != null)
-                {
-                    lastDoor.ShowIcon(false);
-                    lastDoor = null;
-                }
+                    collectable.Collect();
+
+                return; // item için bitti
             }
         }
-        else
-        {
-            if (lastDoor != null)
-            {
-                lastDoor.ShowIcon(false);
-                lastDoor = null;
-            }
-        }
+
+        // Ne kapıya ne fener’e bakıyorsan prompt gizle
+        if (collectPrompt != null && collectPrompt.enabled)
+            collectPrompt.enabled = false;
     }
 }

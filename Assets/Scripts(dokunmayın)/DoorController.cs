@@ -4,7 +4,7 @@ public class DoorController : MonoBehaviour
 {
     public GameObject interactionIcon; // World Space Canvas veya sadece Image objesi
 
-    private bool isOpen = false;
+    private bool isOpen = true;
     private float openAngle = 90f;
     private float closedAngle = 0f;
     private float speed = 5f;
