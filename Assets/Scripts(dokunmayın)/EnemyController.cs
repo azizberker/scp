@@ -49,7 +49,8 @@ public class EnemyController : MonoBehaviour
         }
 
         float dist = Vector3.Distance(transform.position, player.position);
-        if (dist <= killRange)
+        // Oyuncu düşmanı görebiliyorsa (isVisible == true) yakın mesafede olsa bile hasar verilmez.
+        if (dist <= killRange && !isVisible)
         {
             KillPlayer();
             return;
@@ -96,7 +97,7 @@ public class EnemyController : MonoBehaviour
         agent.isStopped = true;
         agent.velocity = Vector3.zero;
 
-        // Eğer zaten bir anim pause coroutine’i yoksa, başlat
+        // Eğer zaten bir anim pause coroutine'i yoksa, başlat
         if (animPauseCoroutine == null)
             animPauseCoroutine = StartCoroutine(DelayedAnimPause());
     }
