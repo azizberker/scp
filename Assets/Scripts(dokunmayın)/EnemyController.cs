@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -13,31 +14,26 @@ public class EnemyController : MonoBehaviour
     public float detectionRange = 30f;
     public float killRange = 1.5f;
     public float checkInterval = 0.1f;
-    public LayerMask obstacleLayer;
 
-    private bool isVisible = false;
+    [Header("Delay")]
+    public float animPauseDelay = 0.2f;
+
+    private bool isVisible;
     private float nextCheckTime;
+    public Animator animator;
+
+    private Coroutine animPauseCoroutine;
 
     void Start()
     {
-        // Find player if not assigned
         if (player == null)
-        {
-            var p = GameObject.FindGameObjectWithTag("Player");
-            if (p) player = p.transform;
-        }
+            player = GameObject.FindGameObjectWithTag("Player")?.transform;
 
-        // Find player camera if not assigned
         if (playerCamera == null && player != null)
-        {
             playerCamera = player.GetComponentInChildren<Camera>();
-        }
 
-        // Get NavMeshAgent component
         if (agent == null)
-        {
             agent = GetComponent<NavMeshAgent>();
-        }
 
         agent.speed = moveSpeed;
     }
@@ -46,112 +42,74 @@ public class EnemyController : MonoBehaviour
     {
         if (player == null || playerCamera == null) return;
 
-        // Check if it's time to update visibility
         if (Time.time >= nextCheckTime)
         {
             CheckVisibility();
             nextCheckTime = Time.time + checkInterval;
         }
 
-        // Check kill range
-        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
-        if (distanceToPlayer <= killRange)
+        float dist = Vector3.Distance(transform.position, player.position);
+        if (dist <= killRange)
         {
             KillPlayer();
             return;
         }
 
-        // Move only if not visible and within detection range
-        if (!isVisible && distanceToPlayer <= detectionRange)
-        {
-            MoveTowardsPlayer();
-        }
+        if (!isVisible && dist <= detectionRange)
+            ResumeMovementAndAnimation();
         else
-        {
-            StopMoving();
-        }
+            PauseMovementImmediate_AnimationDelayed();
     }
 
     void CheckVisibility()
     {
-        if (playerCamera == null)
+        Vector3 vp = playerCamera.WorldToViewportPoint(transform.position);
+        if (vp.z < 0 || vp.x < 0 || vp.x > 1 || vp.y < 0 || vp.y > 1)
         {
             isVisible = false;
             return;
         }
-
-        // 1. Quick frustum check using viewport coordinates
-        Vector3 viewportPoint = playerCamera.WorldToViewportPoint(transform.position);
-
-        // If behind the camera or outside viewport => not visible
-        if (viewportPoint.z < 0 || viewportPoint.x < 0 || viewportPoint.x > 1 || viewportPoint.y < 0 || viewportPoint.y > 1)
-        {
-            isVisible = false;
-            return;
-        }
-
-        // 2. Raycast to detect occlusion (any collider between camera and enemy blocks visibility)
         Vector3 dir = transform.position - playerCamera.transform.position;
-        float dist = dir.magnitude;
-        RaycastHit hit;
-
-        // Cast against everything except the player
-        if (Physics.Raycast(playerCamera.transform.position, dir.normalized, out hit, dist))
-        {
-            // If the first thing hit is the enemy itself, it's visible. Otherwise, it's occluded.
-            isVisible = hit.transform == transform;
-        }
+        if (Physics.Raycast(playerCamera.transform.position, dir.normalized, out RaycastHit hit, dir.magnitude))
+            isVisible = (hit.transform == transform);
         else
-        {
-            // Nothing hit – technically unobstructed, but if this occurs treat as visible to be safe
             isVisible = true;
-        }
     }
 
-    void MoveTowardsPlayer()
+    void ResumeMovementAndAnimation()
     {
-        // Predict if moving to the next position would make the enemy visible
-        Vector3 nextPos = Vector3.MoveTowards(transform.position, player.position, agent.speed * Time.deltaTime);
-        if (WouldBeVisible(nextPos))
+        // Eğer animasyon durdurma coroutine'i varsa iptal et, animasyon 1 olsun
+        if (animPauseCoroutine != null)
         {
-            StopMoving();
-            return;
+            StopCoroutine(animPauseCoroutine);
+            animPauseCoroutine = null;
         }
+
         agent.isStopped = false;
+        animator.speed = 1f;
         agent.SetDestination(player.position);
     }
 
-    bool WouldBeVisible(Vector3 position)
+    void PauseMovementImmediate_AnimationDelayed()
     {
-        if (playerCamera == null)
-            return false;
-
-        Vector3 viewportPoint = playerCamera.WorldToViewportPoint(position);
-        if (viewportPoint.z < 0 || viewportPoint.x < 0 || viewportPoint.x > 1 || viewportPoint.y < 0 || viewportPoint.y > 1)
-            return false;
-
-        Vector3 dir = position - playerCamera.transform.position;
-        float dist = dir.magnitude;
-        RaycastHit hit;
-        if (Physics.Raycast(playerCamera.transform.position, dir.normalized, out hit, dist))
-        {
-            return hit.transform == transform;
-        }
-        return true;
-    }
-
-    void StopMoving()
-    {
+        // Hareketi hemen durdur
         agent.isStopped = true;
         agent.velocity = Vector3.zero;
+
+        // Eğer zaten bir anim pause coroutine’i yoksa, başlat
+        if (animPauseCoroutine == null)
+            animPauseCoroutine = StartCoroutine(DelayedAnimPause());
+    }
+
+    private IEnumerator DelayedAnimPause()
+    {
+        yield return new WaitForSeconds(animPauseDelay);
+        animator.speed = 0f;
+        animPauseCoroutine = null;
     }
 
     void KillPlayer()
     {
-        var playerHealth = player.GetComponent<PlayerHealth>();
-        if (playerHealth != null)
-        {
-            playerHealth.TakeDamage(1000); // Instant kill
-        }
+        player.GetComponent<PlayerHealth>()?.TakeDamage(1000);
     }
-} 
+}
