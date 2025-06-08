@@ -64,13 +64,13 @@ public class EnemyController : MonoBehaviour
 
     void CheckVisibility()
     {
-        Vector3 vp = playerCamera.WorldToViewportPoint(transform.position);
+        Vector3 vp = playerCamera.WorldToViewportPoint(transform.position+Vector3.up);
         if (vp.z < 0 || vp.x < 0 || vp.x > 1 || vp.y < 0 || vp.y > 1)
         {
             isVisible = false;
             return;
         }
-        Vector3 dir = transform.position - playerCamera.transform.position;
+        Vector3 dir = transform.position + Vector3.up - playerCamera.transform.position;
         if (Physics.Raycast(playerCamera.transform.position, dir.normalized, out RaycastHit hit, dir.magnitude))
             isVisible = (hit.transform == transform);
         else
