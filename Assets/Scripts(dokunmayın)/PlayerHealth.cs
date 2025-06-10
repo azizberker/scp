@@ -2,14 +2,15 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.Rendering.PostProcessing;
+using TMPro;
 
 public class PlayerHealth : MonoBehaviour
 {
     public int maxHealth = 100;
     public int currentHealth;
-
-    [Header("UI")]
-    public Slider healthSlider;
+    public int maxTempHealth = 100;  // Maksimum geçici can
+    public int currentTempHealth;    // Mevcut geçici can
+    public TextMeshProUGUI tempHealthText;  // Geçici can için text
 
     [Header("Death Effect")]
     public PostProcessVolume postProcessVolume;
@@ -25,13 +26,28 @@ public class PlayerHealth : MonoBehaviour
         Time.timeScale = 1f;
 
         currentHealth = maxHealth;
-        healthSlider.maxValue = maxHealth;
-        healthSlider.value = currentHealth;
+        currentTempHealth = maxTempHealth;  // Geçici canı başlangıçta maksimum yap
+
+        if (tempHealthText != null)
+        {
+            UpdateTempHealthText();
+        }
 
         SetupPostProcess();
-
-        // Başlangıçta post process değerlerini sıfırla
         ResetPostProcess();
+    }
+
+    void Update()
+    {
+        if (tempHealthText != null)
+        {
+            UpdateTempHealthText();
+        }
+    }
+
+    void UpdateTempHealthText()
+    {
+        tempHealthText.text = currentTempHealth.ToString();
     }
 
     void SetupPostProcess()
@@ -86,25 +102,45 @@ public class PlayerHealth : MonoBehaviour
 
     public void TakeDamage(int damage)
     {
-        if (isDead) return; // ölüyse hasar alma
+        if (isDead) return;
 
-        currentHealth -= damage;
-        currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
-        healthSlider.value = currentHealth;
-
-        Debug.Log("Hasar alındı! Can: " + currentHealth);
-
-        if (currentHealth <= 0)
+        // Önce geçici cana hasar ver
+        if (currentTempHealth > 0)
         {
-            Die();
+            if (damage <= currentTempHealth)
+            {
+                currentTempHealth -= damage;
+                damage = 0;
+            }
+            else
+            {
+                damage -= currentTempHealth;
+                currentTempHealth = 0;
+            }
+            UpdateTempHealthText();
         }
+
+        // Kalan hasar varsa normal cana ver
+        if (damage > 0)
+        {
+            currentHealth -= damage;
+            currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
+        }
+
+        Debug.Log("Hasar alındı! Can: " + currentHealth + " Geçici Can: " + currentTempHealth);
     }
 
     public void Heal(int amount)
     {
         currentHealth += amount;
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
-        healthSlider.value = currentHealth;
+    }
+
+    public void HealTemp(int amount)
+    {
+        currentTempHealth += amount;
+        currentTempHealth = Mathf.Clamp(currentTempHealth, 0, maxTempHealth);
+        UpdateTempHealthText();
     }
 
     void Die()

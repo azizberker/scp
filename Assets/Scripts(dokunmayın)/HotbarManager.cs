@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 public class HotbarManager : MonoBehaviour
@@ -7,7 +7,7 @@ public class HotbarManager : MonoBehaviour
 
     public Image[] slotImages;
     public Image[] selectionBorders;
-    public ItemDataSO[] items = new ItemDataSO[3];
+    public ItemDataSO[] items = new ItemDataSO[4]; // 🔸 Dizi boyutu 4 oldu
 
     public Transform handTransform; // FPS karakterindeki "Hand" objesi
     private GameObject currentEquippedObj;
@@ -32,6 +32,7 @@ public class HotbarManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Alpha1)) { SelectSlot(0); EquipItem(0); }
         if (Input.GetKeyDown(KeyCode.Alpha2)) { SelectSlot(1); EquipItem(1); }
         if (Input.GetKeyDown(KeyCode.Alpha3)) { SelectSlot(2); EquipItem(2); }
+        if (Input.GetKeyDown(KeyCode.Alpha4)) { SelectSlot(3); EquipItem(3); } // 🔸 Burayı Alpha4 olarak düzelttik
     }
 
     void SelectSlot(int index)
@@ -70,7 +71,7 @@ public class HotbarManager : MonoBehaviour
             {
                 items[i] = newItem;
                 UpdateHotbarUI();
-                EquipItem(i); // Yeni item� hemen ele al
+                EquipItem(i);
                 return;
             }
         }

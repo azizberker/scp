@@ -3,35 +3,85 @@ using UnityEngine.UI;
 
 public class Stamina : MonoBehaviour
 {
-    public float stamina; // Başlangıç ve maksimum stamina değeri
+    public float stamina; // BaÅŸlangÄ± ve maksimum stamina deÄŸeri
     public Slider StaminaBar;
+    public Image staminabarImage;
 
-    // Koşma, zıplama ve stamina yenilenme değerleri
-    public float staminaDrainRate = 10f;  // Koşma sırasında harcanan stamina miktarı
-    public float staminaJumpCost = 5f;    // Zıplama sırasında harcanan stamina miktarı
-    public float staminaRegenRate = 5f;   // Koşmadaki harcamadan sonra dolanma hızı
+    // KoÅŸma, zÄ±plama ve stamina yenilenme deÄŸerleri
+    public float staminaDrainRate = 10f;  // KoÅŸma sÄ±rasÄ±nda harcanan stamina miktarÄ±
+    public float staminaJumpCost = 5f;    // ZÄ±plama sÄ±rasÄ±nda harcanan stamina miktarÄ±
+    public float staminaRegenRate = 5f;   // KoÅŸmadaki harcamadan sonra dolanma hÄ±zÄ±
 
     private float maxStamina;
+    private bool canRegenerate = true;
+    private float emptyStaminaDelay = 5f;    // Stamina 0 olduÄŸundaki bekleme sÃ¼resi
+    private float partialStaminaDelay = 3f;  // Stamina 0'dan bÃ¼yÃ¼k olduÄŸundaki bekleme sÃ¼resi
+    private float regenerationTimer = 0f;
+    private bool isWaiting = false;
+    private bool startedWaiting = false;
 
     void Start()
     {
         maxStamina = stamina;
         if (StaminaBar != null)
             StaminaBar.value = maxStamina;
+        
+        // Image'in type'Ä±nÄ± Filled olarak ayarlÄ±yoruz
+        if (staminabarImage != null)
+        {
+            staminabarImage.type = Image.Type.Filled;
+            staminabarImage.fillMethod = Image.FillMethod.Radial360;
+            staminabarImage.fillOrigin = (int)Image.Origin360.Top;
+            staminabarImage.fillClockwise = true;
+        }
     }
 
     void Update()
     {
-        // LeftShift tuşuna basılmadığında (yani koşulmadığında) stamina yeniden dolar
         if (!Input.GetKey(KeyCode.LeftShift))
         {
-            RegenerateStamina();
+            // KoÅŸmayÄ± yeni bÄ±raktÄ±ysak
+            if (!startedWaiting)
+            {
+                isWaiting = true;
+                startedWaiting = true;
+                regenerationTimer = 0f;
+                canRegenerate = false;
+            }
+
+            if (isWaiting)
+            {
+                float currentDelay = (stamina <= 0) ? emptyStaminaDelay : partialStaminaDelay;
+                regenerationTimer += Time.deltaTime;
+                
+                if (regenerationTimer >= currentDelay)
+                {
+                    canRegenerate = true;
+                    isWaiting = false;
+                }
+            }
+
+            if (canRegenerate)
+            {
+                RegenerateStamina();
+            }
+        }
+        else
+        {
+            regenerationTimer = 0f;
+            isWaiting = false;
+            canRegenerate = false;
+            startedWaiting = false;
         }
 
+        // Hem Slider hem de Image'i gÃ¼ncelliyoruz
         if (StaminaBar != null)
             StaminaBar.value = stamina;
+            
+        if (staminabarImage != null)
+            staminabarImage.fillAmount = stamina / maxStamina;
 
-        // Stamina değeri 0 ile maksimum arasında tutuluyor
+        // Stamina deÄŸeri 0 ile maksimum arasÄ±nda tutuluyor
         if (stamina > maxStamina)
             stamina = maxStamina;
         if (stamina < 0)
@@ -44,19 +94,19 @@ public class Stamina : MonoBehaviour
         stamina += staminaRegenRate * Time.deltaTime;
     }
 
-    // Koşma için gerekli stamina kontrolü
+    // KoÅŸma iÃ§in gerekli stamina kontrolÃ¼
     public bool CanSprint()
     {
         return stamina > 0;
     }
 
-    // Zıplama için gerekli stamina kontrolü
+    // ZÄ±plama iÃ§in gerekli stamina kontrolÃ¼
     public bool CanJump()
     {
         return stamina > 0;
     }
 
-    // Belirtilen miktarda stamina harcaması
+    // Belirtilen miktarda stamina harcamasÄ±
     public void UseStamina(float amount)
     {
         stamina -= amount;
