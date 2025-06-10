@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 913540cccaf209d4cbc2567ddfa77032, type: 3}
-  m_Name: Zil
+  m_Name: PRE_SCP_034
   m_EditorClassIdentifier: 
-  itemName: zil
+  itemName: LA
   itemValue: 1
-  icon: {fileID: 21300000, guid: 750fa98f19a59124888bff3028eec649, type: 3}
-  prefab: {fileID: 7270131205742494720, guid: a58a6350bf7650944ab87251841eae6d, type: 3}
+  icon: {fileID: 0}
+  prefab: {fileID: 7077162111795261784, guid: a032a3d7404f5854fb31dfaeb290004c, type: 3}
