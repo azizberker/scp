@@ -6,6 +6,7 @@ using TMPro;
 
 public class PlayerHealth : MonoBehaviour
 {
+    [Header("Health Settings")]
     public int maxHealth = 100;
     public int currentHealth;
     public int maxTempHealth = 100;  // Maksimum geçici can
@@ -20,6 +21,20 @@ public class PlayerHealth : MonoBehaviour
     private Vignette vignette;
     private bool isDead = false;
 
+    [Header("Death Animation")]
+    public float deathRotationDuration = 1.5f; // Kamera dönüş süresi
+    public float finalCameraAngle = 90f; // Son kamera açısı
+    public float fallForce = 300f; // Düşme kuvveti
+    private Camera playerCamera;
+    private FirstPersonControllerCustom playerController;
+    private MouseLook mouseLook;
+    private float deathTimer = 0f;
+    private Quaternion initialRotation;
+    private bool isDeathAnimationStarted = false;
+    private CharacterController characterController;
+    private CapsuleCollider playerCollider;
+    private Rigidbody playerRigidbody;
+
     void Start()
     {
         // Oyunu normal hızda başlat
@@ -33,6 +48,12 @@ public class PlayerHealth : MonoBehaviour
             UpdateTempHealthText();
         }
 
+        // Kamera ve kontrol bileşenlerini al
+        playerCamera = GetComponentInChildren<Camera>();
+        playerController = GetComponent<FirstPersonControllerCustom>();
+        mouseLook = GetComponentInChildren<MouseLook>();
+        characterController = GetComponent<CharacterController>();
+
         SetupPostProcess();
         ResetPostProcess();
     }
@@ -42,6 +63,25 @@ public class PlayerHealth : MonoBehaviour
         if (tempHealthText != null)
         {
             UpdateTempHealthText();
+        }
+
+        // Ölüm animasyonunu güncelle
+        if (isDeathAnimationStarted && !isDead)
+        {
+            deathTimer += Time.deltaTime;
+            float progress = deathTimer / deathRotationDuration;
+
+            if (playerCamera != null)
+            {
+                // Kamerayı yavaşça döndür
+                float currentAngle = Mathf.Lerp(0, finalCameraAngle, progress);
+                playerCamera.transform.localRotation = initialRotation * Quaternion.Euler(currentAngle, 0, 0);
+            }
+
+            if (progress >= 1f)
+            {
+                CompleteDeathSequence();
+            }
         }
     }
 
@@ -128,31 +168,109 @@ public class PlayerHealth : MonoBehaviour
         }
 
         Debug.Log("Hasar alındı! Can: " + currentHealth + " Geçici Can: " + currentTempHealth);
+
+        // Can sıfırsa öl
+        if (currentHealth <= 0 && !isDead)
+        {
+            Die();
+        }
     }
 
-    public void Heal(int amount)
+    void SetupRagdoll()
     {
-        currentHealth += amount;
-        currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
-    }
+        // CharacterController'ı devre dışı bırak
+        if (characterController != null)
+        {
+            characterController.enabled = false;
+        }
 
-    public void HealTemp(int amount)
-    {
-        currentTempHealth += amount;
-        currentTempHealth = Mathf.Clamp(currentTempHealth, 0, maxTempHealth);
-        UpdateTempHealthText();
+        // Rigidbody ekle
+        if (playerRigidbody == null)
+        {
+            playerRigidbody = gameObject.AddComponent<Rigidbody>();
+            playerRigidbody.mass = 70f; // Gerçekçi bir kütle
+            playerRigidbody.drag = 1f; // Hava direnci
+            playerRigidbody.angularDrag = 5f; // Dönme direnci
+            playerRigidbody.constraints = RigidbodyConstraints.FreezeRotationZ | RigidbodyConstraints.FreezeRotationX;
+        }
+
+        // CapsuleCollider ekle (CharacterController yerine)
+        if (playerCollider == null)
+        {
+            playerCollider = gameObject.AddComponent<CapsuleCollider>();
+            // CharacterController'ın boyutlarını kullan
+            if (characterController != null)
+            {
+                playerCollider.height = characterController.height;
+                playerCollider.radius = characterController.radius;
+                playerCollider.center = characterController.center;
+            }
+        }
+
+        // Düşme kuvveti uygula
+        if (playerRigidbody != null)
+        {
+            // İleri ve aşağı doğru kuvvet uygula
+            Vector3 fallDirection = transform.forward + Vector3.down;
+            playerRigidbody.AddForce(fallDirection.normalized * fallForce, ForceMode.Impulse);
+        }
     }
 
     void Die()
     {
+        if (isDead || isDeathAnimationStarted) return;
         Debug.Log("Oyuncu öldü!");
+
+        // Ölüm animasyonunu başlat
+        isDeathAnimationStarted = true;
+        deathTimer = 0f;
+
+        // Başlangıç rotasyonunu kaydet
+        if (playerCamera != null)
+        {
+            initialRotation = playerCamera.transform.localRotation;
+        }
+
+        // Tüm hareket kontrollerini devre dışı bırak
+        if (playerController != null)
+        {
+            playerController.enabled = false;
+        }
+        if (mouseLook != null)
+        {
+            mouseLook.enabled = false;
+        }
+
+        // PlayerController'ı bul ve devre dışı bırak
+        var playerCtrl = GetComponent<PlayerController>();
+        if (playerCtrl != null)
+        {
+            playerCtrl.enabled = false;
+        }
+
+        // FirstPersonController'ı bul ve devre dışı bırak
+        var firstPersonCtrl = GetComponent<FirstPersonControllerCustom>();
+        if (firstPersonCtrl != null)
+        {
+            firstPersonCtrl.enabled = false;
+        }
+
+        // Ragdoll fiziğini ayarla
+        SetupRagdoll();
+
+        // Post-process efektlerini başlat
         StartCoroutine(DeathSequence());
+    }
+
+    void CompleteDeathSequence()
+    {
+        isDead = true;
+        isDeathAnimationStarted = false;
     }
 
     System.Collections.IEnumerator DeathSequence()
     {
         if (isDead) yield break;
-        isDead = true;
 
         SetupPostProcess();
 
@@ -195,6 +313,20 @@ public class PlayerHealth : MonoBehaviour
         // Post process'i sıfırla (yüklenen sahnede de güvenlik için)
         ResetPostProcess();
 
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        // Sahneyi yeniden yükle
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
+    public void Heal(int amount)
+    {
+        currentHealth += amount;
+        currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
+    }
+
+    public void HealTemp(int amount)
+    {
+        currentTempHealth += amount;
+        currentTempHealth = Mathf.Clamp(currentTempHealth, 0, maxTempHealth);
+        UpdateTempHealthText();
     }
 }

@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 913540cccaf209d4cbc2567ddfa77032, type: 3}
   m_Name: SCP_500
   m_EditorClassIdentifier: 
+  price: 100
   itemName: "\u0130LA\xC7"
   itemValue: 1
   icon: {fileID: 0}

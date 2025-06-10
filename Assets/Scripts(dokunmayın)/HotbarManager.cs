@@ -127,6 +127,25 @@ public class HotbarManager : MonoBehaviour
 
     public void AddItemToHotbar(ItemDataSO newItem)
     {
+        // Önce boş slot var mı kontrol et
+        bool hasEmptySlot = false;
+        for (int i = 0; i < items.Length; i++)
+        {
+            if (items[i] == null)
+            {
+                hasEmptySlot = true;
+                break;
+            }
+        }
+
+        // Eğer boş slot yoksa, item'ı alma
+        if (!hasEmptySlot)
+        {
+            Debug.Log("❌ Hotbar dolu! Daha fazla item alınamaz.");
+            return;
+        }
+
+        // Boş slot varsa item'ı ekle
         for (int i = 0; i < items.Length; i++)
         {
             if (items[i] == null)
@@ -134,6 +153,7 @@ public class HotbarManager : MonoBehaviour
                 items[i] = newItem;
                 UpdateHotbarUI();
                 EquipItem(i);
+                Debug.Log($"✅ {newItem.itemName} hotbar'a eklendi. Slot: {i + 1}");
                 return;
             }
         }

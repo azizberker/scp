@@ -10,7 +10,7 @@ public class PlayerController : MonoBehaviour
     public float reducedHeight = 0.1f;
     public float crouchSpeed = 5f;
     public float speed = 5.0f;
-    public float transitionDuration = 0.1f; // Ge�i� s�resi
+    public float transitionDuration = 0.1f; // Geçiş süresi
 
     void Start()
     {
@@ -21,6 +21,10 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        // Eğer controller devre dışıysa veya null ise hiçbir şey yapma
+        if (controller == null || !controller.enabled || !enabled)
+            return;
+
         if (Input.GetKeyDown(KeyCode.LeftControl))
         {
             StartCoroutine(CrouchTransition(true));
@@ -42,6 +46,10 @@ public class PlayerController : MonoBehaviour
 
         while (elapsed < transitionDuration)
         {
+            // Eğer controller devre dışıysa coroutine'i sonlandır
+            if (!controller.enabled || !enabled)
+                yield break;
+
             elapsed += Time.deltaTime;
             float t = elapsed / transitionDuration;
             controller.height = Mathf.Lerp(startHeight, targetHeight, t);
@@ -50,12 +58,16 @@ public class PlayerController : MonoBehaviour
         }
         controller.height = targetHeight;
         controller.center = targetCenter;
-        // �ste�e ba�l�: H�z� da g�ncelleyebilirsiniz
+        // İsteğe bağlı: Hızı da güncelleyebilirsiniz
         speed = crouching ? crouchSpeed : 5.0f;
     }
 
     void Move()
     {
+        // Eğer controller devre dışıysa veya null ise hiçbir şey yapma
+        if (controller == null || !controller.enabled || !enabled)
+            return;
+
         float horizontal = Input.GetAxis("Horizontal");
         float vertical = Input.GetAxis("Vertical");
         Vector3 direction = transform.right * horizontal + transform.forward * vertical;
