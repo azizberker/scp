@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
@@ -17,10 +17,14 @@ public class MoneyBar : MonoBehaviour
             Destroy(gameObject);
     }
 
-    // Start is called before the first frame update
     void Start()
     {
         UpdateMoneyText();
+    }
+
+    void Update()
+    {
+        // Şu an kullanılmıyor ama istenirse animasyon vs. buraya eklenebilir
     }
 
     public void UpdateMoneyText()
@@ -36,9 +40,20 @@ public class MoneyBar : MonoBehaviour
         return PlayerStats.Instance.Money + amount <= MONEY_LIMIT;
     }
 
-    // Update is called once per frame
-    void Update()
+    public void AddMoney(int amount)
     {
-        
+        if (PlayerStats.Instance != null)
+        {
+            if (CanAddMoney(amount))
+            {
+                PlayerStats.Instance.Money += amount;
+                UpdateMoneyText();
+                Debug.Log($"Para eklendi: +{amount}$ → Yeni bakiye: {PlayerStats.Instance.Money}");
+            }
+            else
+            {
+                Debug.Log("Para limiti aşılamaz!");
+            }
+        }
     }
 }

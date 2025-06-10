@@ -3,13 +3,13 @@ using UnityEngine.UI;
 
 public class HotbarManager : MonoBehaviour
 {
-    public static HotbarManager Instance; // Singleton
+    public static HotbarManager Instance;
 
     public Image[] slotImages;
     public Image[] selectionBorders;
-    public ItemDataSO[] items = new ItemDataSO[4]; // 🔸 Dizi boyutu 4 oldu
+    public ItemDataSO[] items = new ItemDataSO[4];
 
-    public Transform handTransform; // FPS karakterindeki "Hand" objesi
+    public Transform handTransform;
     private GameObject currentEquippedObj;
     private int selectedIndex = 0;
 
@@ -20,7 +20,6 @@ public class HotbarManager : MonoBehaviour
         else
             Destroy(gameObject);
 
-        // Slot image'larını otomatik olarak bul
         Transform hotbarPanel = transform.Find("HotbarPanel");
         if (hotbarPanel != null)
         {
@@ -33,7 +32,6 @@ public class HotbarManager : MonoBehaviour
                     Image[] images = slotTransform.GetComponentsInChildren<Image>();
                     foreach (Image img in images)
                     {
-                        // Ana slot image'ı değilse (yani yeni eklenen image ise)
                         if (img.transform != slotTransform)
                         {
                             slotImages[i] = img;
@@ -56,10 +54,9 @@ public class HotbarManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Alpha1)) { SelectSlot(0); EquipItem(0); }
         if (Input.GetKeyDown(KeyCode.Alpha2)) { SelectSlot(1); EquipItem(1); }
         if (Input.GetKeyDown(KeyCode.Alpha3)) { SelectSlot(2); EquipItem(2); }
-        if (Input.GetKeyDown(KeyCode.Alpha4)) { SelectSlot(3); EquipItem(3); } // 🔸 Burayı Alpha4 olarak düzelttik
+        if (Input.GetKeyDown(KeyCode.Alpha4)) { SelectSlot(3); EquipItem(3); }
     }
 
-    // Slot image'larını değiştirmek için yeni fonksiyonlar
     public void ChangeSlotImage(int slotIndex, Sprite newSprite)
     {
         if (slotIndex >= 0 && slotIndex < slotImages.Length && slotImages[slotIndex] != null)
@@ -113,7 +110,6 @@ public class HotbarManager : MonoBehaviour
                 }
                 else
                 {
-                    // Eğer item yoksa, slotImage'ın kendi sprite'ını koru
                     if (slotImages[i].sprite == null)
                     {
                         slotImages[i].color = new Color(1, 1, 1, 0.2f);
@@ -122,7 +118,9 @@ public class HotbarManager : MonoBehaviour
             }
             if (i < selectionBorders.Length && selectionBorders[i] != null)
             {
-                selectionBorders[i].color = (i == selectedIndex) ? new Color(1, 1, 0, 1) : new Color(1, 1, 0, 0);
+                selectionBorders[i].color = (i == selectedIndex)
+                    ? new Color(1, 1, 0, 1)
+                    : new Color(1, 1, 0, 0);
             }
         }
     }
@@ -173,5 +171,22 @@ public class HotbarManager : MonoBehaviour
         currentEquippedObj.transform.localPosition = Vector3.zero;
         currentEquippedObj.transform.localRotation = Quaternion.identity;
         Debug.Log($"Successfully equipped item: {currentEquippedObj.name} at position {currentEquippedObj.transform.position}");
+    }
+
+    // 🔻 Satış alanı için eklendi:
+    public ItemDataSO GetSelectedItem()
+    {
+        if (selectedIndex >= 0 && selectedIndex < items.Length)
+            return items[selectedIndex];
+        return null;
+    }
+
+    public void RemoveSelectedItem()
+    {
+        if (currentEquippedObj != null)
+            Destroy(currentEquippedObj);
+
+        items[selectedIndex] = null;
+        UpdateHotbarUI();
     }
 }
