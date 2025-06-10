@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class RaycastAction : MonoBehaviour
 {
@@ -9,6 +10,8 @@ public class RaycastAction : MonoBehaviour
 
     [Tooltip("Kapı ve item layer’larını işaretleyin.")]
     public LayerMask interactMask;
+
+    public TextMeshProUGUI itemPriceText;
 
     [Header("E Prompt (Screen UI)")]
     public Image collectPrompt; // Canvas>CollectPrompt Image’ını buraya ata
@@ -45,10 +48,65 @@ public class RaycastAction : MonoBehaviour
 
                 return; // item için bitti
             }
+
+
         }
+
+        if (Physics.Raycast(ray, out hit, 3f, interactMask))
+        {
+            // Item'a bakılıyorsa fiyatı yaz
+            if (hit.collider.TryGetComponent<Item>(out var item))
+            {
+                if (item.data != null && itemPriceText != null)
+                {
+                    itemPriceText.text = $"{item.data.itemName} - {item.data.price}₺";
+                    itemPriceText.enabled = true;
+                }
+
+                // E tuşuna basıldıysa toplama işlemi vs.
+                if (Input.GetKeyDown(KeyCode.E))
+                {
+                    item.Collect();
+                }
+                return;
+            }
+
+            // Kapıya bakılıyorsa gizle fiyatı
+            if (itemPriceText != null)
+                itemPriceText.enabled = false;
+
+            // Diğer raycast işlemleri...
+        }
+        else
+        {
+            if (itemPriceText != null)
+                itemPriceText.enabled = false;
+        }
+
 
         // Ne kapıya ne fener’e bakıyorsan prompt gizle
         if (collectPrompt != null && collectPrompt.enabled)
             collectPrompt.enabled = false;
+
+        Debug.DrawRay(ray.origin, ray.direction * 3f, Color.green);
+
+        if (hit.collider.TryGetComponent<Item>(out var item))
+        {
+            Debug.Log($"Item bulundu: {item.name}");
+
+            if (item.data != null && itemPriceText != null)
+            {
+                itemPriceText.text = $"{item.data.itemName} - {item.data.price}₺";
+                itemPriceText.enabled = true;
+            }
+
+            if (Input.GetKeyDown(KeyCode.E))
+            {
+                item.Collect();
+            }
+
+            return;
+        }
     }
 }
+
