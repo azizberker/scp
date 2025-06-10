@@ -144,14 +144,34 @@ public class HotbarManager : MonoBehaviour
     void EquipItem(int index)
     {
         if (currentEquippedObj != null)
+        {
+            Debug.Log($"Destroying current equipped object: {currentEquippedObj.name}");
             Destroy(currentEquippedObj);
+        }
 
         var itemData = items[index];
-        if (itemData != null && itemData.prefab != null && handTransform != null)
+        if (itemData == null)
         {
-            currentEquippedObj = Instantiate(itemData.prefab, handTransform);
-            currentEquippedObj.transform.localPosition = Vector3.zero;
-            currentEquippedObj.transform.localRotation = Quaternion.identity;
+            Debug.Log($"No item data found for slot {index}");
+            return;
         }
+
+        if (itemData.prefab == null)
+        {
+            Debug.LogError($"Item {itemData.name} has no prefab assigned!");
+            return;
+        }
+
+        if (handTransform == null)
+        {
+            Debug.LogError("Hand Transform is not assigned! Please assign it in the Unity Inspector.");
+            return;
+        }
+
+        Debug.Log($"Attempting to equip item: {itemData.name}");
+        currentEquippedObj = Instantiate(itemData.prefab, handTransform);
+        currentEquippedObj.transform.localPosition = Vector3.zero;
+        currentEquippedObj.transform.localRotation = Quaternion.identity;
+        Debug.Log($"Successfully equipped item: {currentEquippedObj.name} at position {currentEquippedObj.transform.position}");
     }
 }
