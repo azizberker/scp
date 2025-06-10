@@ -16,8 +16,19 @@ public class PlayerStats : MonoBehaviour
 
     public void AddMoney(int amount)
     {
+        if (MoneyBar.Instance != null && !MoneyBar.Instance.CanAddMoney(amount))
+        {
+            Debug.Log("Cannot add money: Would exceed limit!");
+            return;
+        }
+
         Money += amount;
         Debug.Log("Money: " + Money);
+        
+        if (MoneyBar.Instance != null)
+        {
+            MoneyBar.Instance.UpdateMoneyText();
+        }
     }
 }
 

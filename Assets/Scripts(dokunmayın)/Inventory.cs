@@ -25,6 +25,12 @@ public class Inventory : MonoBehaviour
         int total = 0;
         foreach (var item in collectedItems)
         {
+            if (MoneyBar.Instance != null && !MoneyBar.Instance.CanAddMoney(item.itemValue))
+            {
+                Debug.Log($"Cannot sell {item.itemName}: Would exceed money limit!");
+                continue;
+            }
+
             total += item.itemValue;
             Debug.Log($"Sold {item.itemName} for {item.itemValue}");
         }
