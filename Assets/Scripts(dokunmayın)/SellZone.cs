@@ -2,33 +2,37 @@
 
 public class SellZone : MonoBehaviour
 {
-    private bool playerInZone = false;
+    private bool playerInRange = false;
     private float holdTime = 0f;
-    private float requiredHoldTime = 1.5f;
+    private float requiredHoldTime = 0.5f;
+    public float detectionRange = 5f; // Algılama mesafesi (Unity'de ayarlanabilir)
+    private Transform playerTransform;
 
-    private void OnTriggerEnter(Collider other)
+    void Start()
     {
-        if (other.CompareTag("Player"))
+        // Oyun başladığında Player tag'ine sahip objeyi bul
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player != null)
         {
-            playerInZone = true;
-            Debug.Log("▶ Oyuncu satış alanına GİRDİ");
-        }
-    }
-
-    private void OnTriggerExit(Collider other)
-    {
-        if (other.CompareTag("Player"))
-        {
-            playerInZone = false;
-            holdTime = 0f;
-            Debug.Log("◀ Oyuncu satış alanından ÇIKTI");
+            playerTransform = player.transform;
         }
     }
 
     void Update()
     {
-        if (!playerInZone)
+        if (playerTransform == null) return;
+
+        // Oyuncu ile SellZone arasındaki mesafeyi hesapla
+        float distanceToPlayer = Vector3.Distance(transform.position, playerTransform.position);
+        
+        // Oyuncu menzil içinde mi kontrol et
+        playerInRange = distanceToPlayer <= detectionRange;
+
+        if (!playerInRange)
         {
+            if (holdTime > 0f)
+                Debug.Log("◀ Oyuncu satış alanından ÇIKTI");
+            holdTime = 0f;
             return;
         }
 
@@ -63,5 +67,12 @@ public class SellZone : MonoBehaviour
 
             holdTime = 0f;
         }
+    }
+
+    // Gizmos ile Unity editöründe algılama mesafesini görselleştir
+    void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, detectionRange);
     }
 }
