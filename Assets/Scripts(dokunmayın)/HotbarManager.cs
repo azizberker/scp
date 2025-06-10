@@ -19,6 +19,30 @@ public class HotbarManager : MonoBehaviour
             Instance = this;
         else
             Destroy(gameObject);
+
+        // Slot image'larını otomatik olarak bul
+        Transform hotbarPanel = transform.Find("HotbarPanel");
+        if (hotbarPanel != null)
+        {
+            slotImages = new Image[4];
+            for (int i = 0; i < 4; i++)
+            {
+                Transform slotTransform = hotbarPanel.Find($"Slot{i + 1}");
+                if (slotTransform != null)
+                {
+                    Image[] images = slotTransform.GetComponentsInChildren<Image>();
+                    foreach (Image img in images)
+                    {
+                        // Ana slot image'ı değilse (yani yeni eklenen image ise)
+                        if (img.transform != slotTransform)
+                        {
+                            slotImages[i] = img;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
     }
 
     void Start()
@@ -35,6 +59,37 @@ public class HotbarManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Alpha4)) { SelectSlot(3); EquipItem(3); } // 🔸 Burayı Alpha4 olarak düzelttik
     }
 
+    // Slot image'larını değiştirmek için yeni fonksiyonlar
+    public void ChangeSlotImage(int slotIndex, Sprite newSprite)
+    {
+        if (slotIndex >= 0 && slotIndex < slotImages.Length && slotImages[slotIndex] != null)
+        {
+            slotImages[slotIndex].sprite = newSprite;
+            slotImages[slotIndex].color = Color.white;
+        }
+    }
+
+    public void ChangeAllSlotImages(Sprite newSprite)
+    {
+        for (int i = 0; i < slotImages.Length; i++)
+        {
+            if (slotImages[i] != null)
+            {
+                slotImages[i].sprite = newSprite;
+                slotImages[i].color = Color.white;
+            }
+        }
+    }
+
+    public void ResetSlotImage(int slotIndex)
+    {
+        if (slotIndex >= 0 && slotIndex < slotImages.Length && slotImages[slotIndex] != null)
+        {
+            slotImages[slotIndex].sprite = null;
+            slotImages[slotIndex].color = new Color(1, 1, 1, 0.2f);
+        }
+    }
+
     void SelectSlot(int index)
     {
         if (index >= 0 && index < items.Length)
@@ -48,18 +103,27 @@ public class HotbarManager : MonoBehaviour
     {
         for (int i = 0; i < slotImages.Length; i++)
         {
-            slotImages[i].enabled = true;
-            if (items[i] != null && items[i].icon != null)
+            if (slotImages[i] != null)
             {
-                slotImages[i].sprite = items[i].icon;
-                slotImages[i].color = Color.white;
+                slotImages[i].enabled = true;
+                if (items[i] != null && items[i].icon != null)
+                {
+                    slotImages[i].sprite = items[i].icon;
+                    slotImages[i].color = Color.white;
+                }
+                else
+                {
+                    // Eğer item yoksa, slotImage'ın kendi sprite'ını koru
+                    if (slotImages[i].sprite == null)
+                    {
+                        slotImages[i].color = new Color(1, 1, 1, 0.2f);
+                    }
+                }
             }
-            else
+            if (i < selectionBorders.Length && selectionBorders[i] != null)
             {
-                slotImages[i].sprite = null;
-                slotImages[i].color = new Color(1, 1, 1, 0.2f);
+                selectionBorders[i].color = (i == selectedIndex) ? new Color(1, 1, 0, 1) : new Color(1, 1, 0, 0);
             }
-            selectionBorders[i].color = (i == selectedIndex) ? new Color(1, 1, 0, 1) : new Color(1, 1, 0, 0);
         }
     }
 
