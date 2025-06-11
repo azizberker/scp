@@ -7,6 +7,7 @@ public class Flashlight : MonoBehaviour
     [SerializeField] private AudioSource toggleSound;
 
     private bool isOn = true;
+    private bool isEquipped = false;
 
     void Start()
     {
@@ -19,7 +20,7 @@ public class Flashlight : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown(toggleKey))
+        if (isEquipped && Input.GetKeyDown(toggleKey))
         {
             ToggleFlashlight();
         }
@@ -38,5 +39,15 @@ public class Flashlight : MonoBehaviour
     public bool IsOn()
     {
         return isOn;
+    }
+
+    public void SetEquipped(bool equipped)
+    {
+        isEquipped = equipped;
+        if (!isEquipped && flashlight != null)
+        {
+            isOn = false;
+            flashlight.enabled = false;
+        }
     }
 }
