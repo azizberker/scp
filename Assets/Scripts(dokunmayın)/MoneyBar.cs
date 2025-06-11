@@ -8,7 +8,7 @@ public class MoneyBar : MonoBehaviour
     public static MoneyBar Instance;
     public TextMeshProUGUI moneyText;
     private const int MONEY_LIMIT = 8000;
-    private int currentMoney = 0;
+    public int currentMoney { get; private set; } = 0;
 
     void Awake()
     {
@@ -34,6 +34,12 @@ public class MoneyBar : MonoBehaviour
         {
             moneyText.text = $"{currentMoney}/{MONEY_LIMIT}$";
         }
+
+        // PlayerStats'i güncelle
+        if (PlayerStats.Instance != null)
+        {
+            PlayerStats.Instance.Money = currentMoney;
+        }
     }
 
     public bool CanAddMoney(int amount)
@@ -48,6 +54,12 @@ public class MoneyBar : MonoBehaviour
             currentMoney += amount;
             UpdateMoneyText();
             Debug.Log($"Para eklendi: +{amount}$ → Yeni bakiye: {currentMoney}");
+
+            // PlayerStats'i güncelle
+            if (PlayerStats.Instance != null)
+            {
+                PlayerStats.Instance.Money = currentMoney;
+            }
         }
         else
         {

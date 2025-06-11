@@ -26,12 +26,23 @@ public class VagonMessageTrigger : MonoBehaviour
 
     void Update()
     {
-        // Eğer mesaj zaten gösterildiyse veya PlayerStats yoksa çık
-        if (shown || PlayerStats.Instance == null) 
+        // Eğer mesaj zaten gösterildiyse çık
+        if (shown) 
             return;
 
+        // MoneyBar veya PlayerStats üzerinden para kontrolü
+        int currentMoney = 0;
+        if (MoneyBar.Instance != null)
+        {
+            currentMoney = MoneyBar.Instance.currentMoney;
+        }
+        else if (PlayerStats.Instance != null)
+        {
+            currentMoney = PlayerStats.Instance.Money;
+        }
+
         // Para miktarını kontrol et
-        if (PlayerStats.Instance.Money >= targetMoney)
+        if (currentMoney >= targetMoney)
         {
             ShowMessage();
         }
