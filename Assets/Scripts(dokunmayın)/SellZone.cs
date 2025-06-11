@@ -5,12 +5,11 @@ public class SellZone : MonoBehaviour
     private bool playerInRange = false;
     private float holdTime = 0f;
     private float requiredHoldTime = 0.5f;
-    public float detectionRange = 5f; // Algılama mesafesi (Unity'de ayarlanabilir)
+    public float detectionRange = 5f;
     private Transform playerTransform;
 
     void Start()
     {
-        // Oyun başladığında Player tag'ine sahip objeyi bul
         GameObject player = GameObject.FindGameObjectWithTag("Player");
         if (player != null)
         {
@@ -22,33 +21,34 @@ public class SellZone : MonoBehaviour
     {
         if (playerTransform == null) return;
 
-        // Oyuncu ile SellZone arasındaki mesafeyi hesapla
         float distanceToPlayer = Vector3.Distance(transform.position, playerTransform.position);
-        
-        // Oyuncu menzil içinde mi kontrol et
         playerInRange = distanceToPlayer <= detectionRange;
-
-        if (!playerInRange)
-        {
-            if (holdTime > 0f)
-                Debug.Log("◀ Oyuncu satış alanından ÇIKTI");
-            holdTime = 0f;
-            return;
-        }
 
         var hotbar = HotbarManager.Instance;
         var item = hotbar != null ? hotbar.GetSelectedItem() : null;
 
-        if (item == null)
+        // Her karede önce UI'yi kapat
+        SellZoneUI.Instance?.HideUI();
+
+        // Menzilde değilsen veya item yoksa hiçbir şey yapma
+        if (!playerInRange || item == null)
         {
-            Debug.Log("❌ Hotbar'da seçili item yok → Satış yapılmaz");
+            if (holdTime > 0f)
+                Debug.Log("🛑 Satış iptal → Uzaklaşıldı veya item yok");
+            holdTime = 0f;
             return;
         }
+
+        // Artık uygun → UI’yi göster
+        SellZoneUI.Instance?.ShowUI();
 
         if (Input.GetKey(KeyCode.E))
         {
             holdTime += Time.deltaTime;
             Debug.Log($"🕐 E tuşuna basılıyor... {holdTime:F2} / {requiredHoldTime}s");
+
+            float progress = 1f - (holdTime / requiredHoldTime);
+            SellZoneUI.Instance?.UpdateProgress(progress);
 
             if (holdTime >= requiredHoldTime)
             {
@@ -58,6 +58,7 @@ public class SellZone : MonoBehaviour
                 hotbar.RemoveSelectedItem();
 
                 holdTime = 0f;
+                SellZoneUI.Instance?.HideUI();
             }
         }
         else
@@ -66,10 +67,10 @@ public class SellZone : MonoBehaviour
                 Debug.Log("🛑 E tuşu bırakıldı → Sayaç sıfırlandı");
 
             holdTime = 0f;
+            SellZoneUI.Instance?.UpdateProgress(1f);
         }
     }
 
-    // Gizmos ile Unity editöründe algılama mesafesini görselleştir
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;
