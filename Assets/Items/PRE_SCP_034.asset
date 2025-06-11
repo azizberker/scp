@@ -15,5 +15,5 @@ MonoBehaviour:
   price: 350
   itemName: "Obsidyen B\u0131\xE7ak"
   itemValue: 1
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: b9ee2555df1342b449f1118d67833664, type: 3}
   prefab: {fileID: 7077162111795261784, guid: a032a3d7404f5854fb31dfaeb290004c, type: 3}

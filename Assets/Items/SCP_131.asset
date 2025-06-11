@@ -15,5 +15,5 @@ MonoBehaviour:
   price: 8000
   itemName: "G\xF6z Yavrular\u0131"
   itemValue: 1
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 39e68766ea3d63e41a1fe21bc0ec1f5d, type: 3}
   prefab: {fileID: 6482605871999558953, guid: a0a283aa9ec32f84086c9540be8fbced, type: 3}
