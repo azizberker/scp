@@ -202,8 +202,14 @@ public class HotbarManager : MonoBehaviour
 
     void EquipItem(int index)
     {
+        // Önceki flashlight'ı unequip et
         if (currentEquippedObj != null)
         {
+            Flashlight oldFlashlight = currentEquippedObj.GetComponent<Flashlight>();
+            if (oldFlashlight != null)
+            {
+                oldFlashlight.SetEquipped(false);
+            }
             Destroy(currentEquippedObj);
         }
 
@@ -215,13 +221,21 @@ public class HotbarManager : MonoBehaviour
         currentEquippedObj.transform.localPosition = Vector3.zero;
         currentEquippedObj.transform.localRotation = Quaternion.identity;
 
-        // 🔦 Flashlight ise UI göster
+        // Yeni flashlight'ı equip et
         if (itemData.itemName.ToLower().Contains("flashlight"))
+        {
+            Flashlight newFlashlight = currentEquippedObj.GetComponent<Flashlight>();
+            if (newFlashlight != null)
+            {
+                newFlashlight.SetEquipped(true);
+            }
             ItemTipsUI.Instance?.ShowFlashlightTip(true);
+        }
         else
+        {
             ItemTipsUI.Instance?.ShowFlashlightTip(false);
+        }
 
-        // 📦 Her item için "Drop Item" göster
         ItemTipsUI.Instance?.ShowDropTip(true);
     }
 
@@ -237,6 +251,12 @@ public class HotbarManager : MonoBehaviour
     {
         if (currentEquippedObj != null)
         {
+            // Flashlight'ı unequip et
+            Flashlight flashlight = currentEquippedObj.GetComponent<Flashlight>();
+            if (flashlight != null)
+            {
+                flashlight.SetEquipped(false);
+            }
             Destroy(currentEquippedObj);
         }
 
