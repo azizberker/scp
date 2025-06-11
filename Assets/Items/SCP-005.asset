@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 913540cccaf209d4cbc2567ddfa77032, type: 3}
   m_Name: SCP-005
   m_EditorClassIdentifier: 
-  price: 3000
+  price: 100
   itemName: Anahtar
   itemValue: 1
   icon: {fileID: 0}

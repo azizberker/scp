@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 913540cccaf209d4cbc2567ddfa77032, type: 3}
   m_Name: PRE_SCP_034
   m_EditorClassIdentifier: 
-  price: 1000
-  itemName: PRE_SCP_034
+  price: 350
+  itemName: "Obsidyen B\u0131\xE7ak"
   itemValue: 1
   icon: {fileID: 0}
   prefab: {fileID: 7077162111795261784, guid: a032a3d7404f5854fb31dfaeb290004c, type: 3}

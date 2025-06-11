@@ -13,12 +13,21 @@ public class HotbarManager : MonoBehaviour
     private GameObject currentEquippedObj;
     private int selectedIndex = 0;
 
+    [SerializeField] private Sprite defaultSlotSprite; // Rectangle 193 için
+
     void Awake()
     {
         if (Instance == null)
             Instance = this;
         else
             Destroy(gameObject);
+
+        // Önce default sprite'ı kontrol et
+        if (defaultSlotSprite == null)
+        {
+            Debug.LogError("Default Slot Sprite atanmamış! Lütfen Unity Inspector'da atayın!");
+            return;
+        }
 
         Transform hotbarPanel = transform.Find("HotbarPanel");
         if (hotbarPanel != null)
@@ -35,11 +44,25 @@ public class HotbarManager : MonoBehaviour
                         if (img.transform != slotTransform)
                         {
                             slotImages[i] = img;
+                            EnsureSlotHasSprite(i); // Her slot için sprite kontrolü
                             break;
                         }
                     }
                 }
             }
+        }
+    }
+
+    // Slot'un sprite'ını kontrol eden ve düzelten fonksiyon
+    private void EnsureSlotHasSprite(int index)
+    {
+        if (slotImages[index] != null)
+        {
+            if (slotImages[index].sprite == null)
+            {
+                slotImages[index].sprite = defaultSlotSprite;
+            }
+            slotImages[index].color = new Color(1, 1, 1, 0.2f);
         }
     }
 
@@ -51,10 +74,25 @@ public class HotbarManager : MonoBehaviour
 
     void Update()
     {
+        // Hotbar slot seçimleri
         if (Input.GetKeyDown(KeyCode.Alpha1)) { SelectSlot(0); EquipItem(0); }
         if (Input.GetKeyDown(KeyCode.Alpha2)) { SelectSlot(1); EquipItem(1); }
         if (Input.GetKeyDown(KeyCode.Alpha3)) { SelectSlot(2); EquipItem(2); }
         if (Input.GetKeyDown(KeyCode.Alpha4)) { SelectSlot(3); EquipItem(3); }
+
+        // Flashlight kontrolü - sadece elimizde flashlight varsa çalışsın
+        if (Input.GetKeyDown(KeyCode.F) && items[selectedIndex] != null)
+        {
+            if (items[selectedIndex].itemName.ToLower().Contains("flashlight"))
+            {
+                // Flashlight'ı bul ve aç/kapa
+                Light flashlightComponent = currentEquippedObj?.GetComponentInChildren<Light>();
+                if (flashlightComponent != null)
+                {
+                    flashlightComponent.enabled = !flashlightComponent.enabled;
+                }
+            }
+        }
     }
 
     public void ChangeSlotImage(int slotIndex, Sprite newSprite)
@@ -82,7 +120,7 @@ public class HotbarManager : MonoBehaviour
     {
         if (slotIndex >= 0 && slotIndex < slotImages.Length && slotImages[slotIndex] != null)
         {
-            slotImages[slotIndex].sprite = null;
+            slotImages[slotIndex].sprite = defaultSlotSprite; // Rectangle 193'e geri dön
             slotImages[slotIndex].color = new Color(1, 1, 1, 0.2f);
         }
     }
@@ -110,13 +148,16 @@ public class HotbarManager : MonoBehaviour
                 }
                 else
                 {
-                    if (slotImages[i].sprite == null)
-                    {
-                        slotImages[i].color = new Color(1, 1, 1, 0.2f);
-                    }
+                    slotImages[i].sprite = defaultSlotSprite;
+                    slotImages[i].color = new Color(1, 1, 1, 0.2f);
                 }
             }
-            if (i < selectionBorders.Length && selectionBorders[i] != null)
+        }
+
+        // Seçili slot için border rengini güncelle
+        for (int i = 0; i < selectionBorders.Length; i++)
+        {
+            if (selectionBorders[i] != null)
             {
                 selectionBorders[i].color = (i == selectedIndex)
                     ? new Color(1, 1, 0, 1)
@@ -163,34 +204,25 @@ public class HotbarManager : MonoBehaviour
     {
         if (currentEquippedObj != null)
         {
-            Debug.Log($"Destroying current equipped object: {currentEquippedObj.name}");
             Destroy(currentEquippedObj);
         }
 
         var itemData = items[index];
-        if (itemData == null)
-        {
-            Debug.Log($"No item data found for slot {index}");
+        if (itemData == null || itemData.prefab == null || handTransform == null)
             return;
-        }
 
-        if (itemData.prefab == null)
-        {
-            Debug.LogError($"Item {itemData.name} has no prefab assigned!");
-            return;
-        }
-
-        if (handTransform == null)
-        {
-            Debug.LogError("Hand Transform is not assigned! Please assign it in the Unity Inspector.");
-            return;
-        }
-
-        Debug.Log($"Attempting to equip item: {itemData.name}");
         currentEquippedObj = Instantiate(itemData.prefab, handTransform);
         currentEquippedObj.transform.localPosition = Vector3.zero;
         currentEquippedObj.transform.localRotation = Quaternion.identity;
-        Debug.Log($"Successfully equipped item: {currentEquippedObj.name} at position {currentEquippedObj.transform.position}");
+
+        // 🔦 Flashlight ise UI göster
+        if (itemData.itemName.ToLower().Contains("flashlight"))
+            ItemTipsUI.Instance?.ShowFlashlightTip(true);
+        else
+            ItemTipsUI.Instance?.ShowFlashlightTip(false);
+
+        // 📦 Her item için "Drop Item" göster
+        ItemTipsUI.Instance?.ShowDropTip(true);
     }
 
     // 🔻 Satış alanı için eklendi:
@@ -204,9 +236,21 @@ public class HotbarManager : MonoBehaviour
     public void RemoveSelectedItem()
     {
         if (currentEquippedObj != null)
+        {
             Destroy(currentEquippedObj);
+        }
+
+        // UI ipuçlarını gizle
+        ItemTipsUI.Instance?.ShowDropTip(false);
+        
+        // Eğer flashlight drop edildiyse onun ipucunu da gizle
+        if (items[selectedIndex] != null && items[selectedIndex].itemName.ToLower().Contains("flashlight"))
+        {
+            ItemTipsUI.Instance?.ShowFlashlightTip(false);
+        }
 
         items[selectedIndex] = null;
+        EnsureSlotHasSprite(selectedIndex);
         UpdateHotbarUI();
     }
 }
