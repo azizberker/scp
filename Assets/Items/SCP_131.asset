@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 913540cccaf209d4cbc2567ddfa77032, type: 3}
   m_Name: SCP_131
   m_EditorClassIdentifier: 
-  price: 150
+  price: 8000
   itemName: "G\xF6z Yavrular\u0131"
   itemValue: 1
   icon: {fileID: 0}
