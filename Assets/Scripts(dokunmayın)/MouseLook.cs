@@ -1,34 +1,78 @@
-    using JetBrains.Annotations;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-
 
 public class MouseLook : MonoBehaviour
 {
-    public float sensivity = 800f;
-    public Transform body;
+    [Header("Mouse Settings")]
+    [Range(0.1f, 10f)]
+    public float mouseSensitivity = 2.0f;
+    
+    [Range(0.1f, 1f)]
+    public float smoothing = 0.2f;
 
-    private float xRot = 0;
+    [Header("Rotation Limits")]
+    public float minVerticalAngle = -89f;
+    public float maxVerticalAngle = 89f;
 
-    void Start()
+    [Header("References")]
+    public Transform playerBody;
+
+    // Private variables
+    private Vector2 smoothedMouseDelta;
+    private Vector2 currentMouseDelta;
+    private float currentVerticalRotation = 0f;
+    private bool cursorLocked = true;
+
+    private void Start()
     {
-        Cursor.lockState = CursorLockMode.Locked;
+        SetCursorState(true);
     }
-   
-    void Update()
+
+    private void Update()
     {
-        float hor = Input.GetAxis("Mouse X") * sensivity * Time.deltaTime;
-        float ver = Input.GetAxis("Mouse Y") * sensivity * Time.deltaTime;
-
-        xRot -= ver;
-
-        xRot = Mathf.Clamp(xRot, -90f, 90f);
-
-        transform.localRotation = Quaternion.Euler(xRot, 0, 0);
-        body.Rotate(Vector3.up * hor);
+        HandleMouseInput();
+        HandleCursorLock();
     }
 
+    private void HandleMouseInput()
+    {
+        // Get raw mouse input
+        Vector2 mouseDelta = new Vector2(
+            Input.GetAxisRaw("Mouse X"),
+            Input.GetAxisRaw("Mouse Y")
+        );
+
+        // Scale input by sensitivity
+        mouseDelta *= mouseSensitivity;
+
+        // Smooth the mouse movement
+        currentMouseDelta = Vector2.Lerp(currentMouseDelta, mouseDelta, 1f / smoothing * Time.deltaTime);
+        smoothedMouseDelta = currentMouseDelta;
+
+        // Rotate camera up/down
+        currentVerticalRotation -= smoothedMouseDelta.y;
+        currentVerticalRotation = Mathf.Clamp(currentVerticalRotation, minVerticalAngle, maxVerticalAngle);
+        transform.localRotation = Quaternion.Euler(currentVerticalRotation, 0f, 0f);
+
+        // Rotate player body left/right
+        if (playerBody != null)
+        {
+            playerBody.Rotate(Vector3.up * smoothedMouseDelta.x);
+        }
+    }
+
+    private void HandleCursorLock()
+    {
+        // Toggle cursor lock with Escape key
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            SetCursorState(!cursorLocked);
+        }
+    }
+
+    private void SetCursorState(bool locked)
+    {
+        cursorLocked = locked;
+        Cursor.lockState = locked ? CursorLockMode.Locked : CursorLockMode.None;
+        Cursor.visible = !locked;
+    }
 }
-
- 
