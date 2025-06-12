@@ -27,6 +27,14 @@ public class FirstPersonControllerCustom : MonoBehaviour
     // Stamina Sistemi
     private Stamina staminaSystem;
 
+    // Ses 
+    public AudioClip[] footstepSounds; // Birden fazla ses için dizi, istersen tek ses de olabilir
+    private AudioSource audioSource;
+    private float footstepTimer = 0f;
+    public float footstepInterval = 0.4f; // Adım aralığı (koşarken azaltabilirsin)
+    private int footstepIndex = 0;
+    public AudioClip jumpSound;
+
     void Start()
     {
         characterController = GetComponent<CharacterController>();
@@ -34,13 +42,30 @@ public class FirstPersonControllerCustom : MonoBehaviour
         defaultFOV = cam.fieldOfView;
         staminaSystem = GetComponent<Stamina>();
         speed = walkSpeed;
-    }
+        audioSource = GetComponent<AudioSource>();
+        
+}
 
     void Update()
     {
         DoMove();
         DoGravityAndJump();
         DoSprint();
+
+        // Ayakta ve hareket ediyorsa
+        if (characterController.isGrounded && (Mathf.Abs(Input.GetAxis("Horizontal")) > 0.1f || Mathf.Abs(Input.GetAxis("Vertical")) > 0.1f))
+        {
+            footstepTimer -= Time.deltaTime;
+            if (footstepTimer <= 0f)
+            {
+                PlayFootstepSound();
+                footstepTimer = isRunning ? footstepInterval * 0.6f : footstepInterval; // Koşarken daha sık çal
+            }
+        }
+        else
+        {
+            footstepTimer = 0f; // Durdurunca sıfırla
+        }
     }
 
     private void DoSprint()
@@ -84,6 +109,7 @@ public class FirstPersonControllerCustom : MonoBehaviour
         {
             velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
             staminaSystem.UseStamina(staminaSystem.staminaJumpCost);
+            PlayJumpSound();
         }
 
         velocity.y += gravity * Time.deltaTime * 1.2f;
@@ -120,5 +146,20 @@ public class FirstPersonControllerCustom : MonoBehaviour
             horizontalVel.y = 0;
             return horizontalVel.magnitude;
         }
+    }
+    private void PlayFootstepSound()
+    {
+        if (footstepSounds.Length > 0)
+        {
+            audioSource.clip = footstepSounds[footstepIndex];
+            audioSource.Play();
+            footstepIndex = (footstepIndex + 1) % footstepSounds.Length; // sıradaki sesi al
+        }
+    }
+
+    private void PlayJumpSound()
+    {
+        if (audioSource != null && jumpSound != null)
+            audioSource.PlayOneShot(jumpSound);
     }
 }

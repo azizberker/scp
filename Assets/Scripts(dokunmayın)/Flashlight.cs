@@ -6,6 +6,10 @@ public class Flashlight : MonoBehaviour
     [SerializeField] private Light flashlight;
     [SerializeField] private AudioSource toggleSound;
 
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip onSound;
+    [SerializeField] private AudioClip offSound;
+
     private bool isOn = true;
     private bool isEquipped = false;
 
@@ -32,8 +36,13 @@ public class Flashlight : MonoBehaviour
         if (flashlight != null)
             flashlight.enabled = isOn;
 
-        if (toggleSound != null)
-            toggleSound.Play();
+        if (audioSource != null)
+        {
+            if (isOn && onSound != null)
+                audioSource.PlayOneShot(onSound);
+            else if (!isOn && offSound != null)
+                audioSource.PlayOneShot(offSound);
+        }
     }
 
     public bool IsOn()

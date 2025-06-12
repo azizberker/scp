@@ -24,6 +24,12 @@ public class EnemyController : MonoBehaviour
 
     private Coroutine animPauseCoroutine;
 
+    [Header("Audio")]
+    public AudioClip alertClip;
+    public AudioClip hitClip;
+    private AudioSource audioSource;
+    private bool alerted = false;
+
     void Start()
     {
         if (player == null)
@@ -34,6 +40,9 @@ public class EnemyController : MonoBehaviour
 
         if (agent == null)
             agent = GetComponent<NavMeshAgent>();
+
+        audioSource = GetComponent<AudioSource>(); 
+
 
         agent.speed = moveSpeed;
     }
@@ -55,11 +64,20 @@ public class EnemyController : MonoBehaviour
             KillPlayer();
             return;
         }
-
         if (!isVisible && dist <= detectionRange)
+        {
+            if (!alerted)
+            {
+                PlayAlertSound();
+                alerted = true;
+            }
             ResumeMovementAndAnimation();
+        }
         else
+        {
             PauseMovementImmediate_AnimationDelayed();
+            alerted = false; // Eğer tekrar görünür olunca sesi tekrar çalmak istersen
+        }
     }
 
     void CheckVisibility()
@@ -111,6 +129,18 @@ public class EnemyController : MonoBehaviour
 
     void KillPlayer()
     {
+        PlayHitSound();
         player.GetComponent<PlayerHealth>()?.TakeDamage(1000);
+    }
+
+    void PlayAlertSound()
+    {
+        if (audioSource != null && alertClip != null)
+            audioSource.PlayOneShot(alertClip);
+    }
+    void PlayHitSound()
+    {
+        if (audioSource != null && hitClip != null)
+            audioSource.PlayOneShot(hitClip);
     }
 }

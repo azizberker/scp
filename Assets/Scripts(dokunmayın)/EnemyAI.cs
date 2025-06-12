@@ -26,10 +26,19 @@ public class EnemyAI : MonoBehaviour
     private Animator animator;
     private string currentState = "";
 
+    [Header("Audio")]
+    public AudioClip alertClip;
+    public AudioClip hitClip;
+    private AudioSource audioSource;
+    private bool alerted = false;
+
+
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
+
+        audioSource = GetComponent<AudioSource>(); 
 
         // Player otomatik bulma
         if (player == null)
@@ -76,6 +85,17 @@ public class EnemyAI : MonoBehaviour
 
     void Chase()
     {
+
+        if (!alerted)
+        {
+            PlayAlertSound();
+            alerted = true;
+        }
+        agent.isStopped = false;
+        agent.speed = runSpeed;
+        agent.SetDestination(player.position);
+        SafePlay("Run");
+
         agent.isStopped = false;
         agent.speed = runSpeed;
         agent.SetDestination(player.position);
@@ -106,7 +126,11 @@ public class EnemyAI : MonoBehaviour
         if (Vector3.Distance(transform.position, player.position) <= attackRange + 0.5f)
         {
             var ph = player.GetComponent<PlayerHealth>();
-            if (ph != null) ph.TakeDamage(10);
+            if (ph != null)
+            {
+                PlayHitSound();
+                ph.TakeDamage(10);
+            }
         }
     }
 
@@ -122,5 +146,16 @@ public class EnemyAI : MonoBehaviour
         if (currentState == stateName) return;
         animator.Play(stateName);
         currentState = stateName;
+    }
+
+    void PlayAlertSound()
+    {
+        if (audioSource != null && alertClip != null)
+            audioSource.PlayOneShot(alertClip);
+    }
+    void PlayHitSound()
+    {
+        if (audioSource != null && hitClip != null)
+            audioSource.PlayOneShot(hitClip);
     }
 }

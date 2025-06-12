@@ -35,6 +35,12 @@ public class PlayerHealth : MonoBehaviour
     private CapsuleCollider playerCollider;
     private Rigidbody playerRigidbody;
 
+    //Ses
+    public AudioClip jumpscareClip; // Inspector’dan atacaksın
+    private AudioSource jumpscareSource; // Kodda bulacağız
+    private bool jumpscared = false; // Sadece 1 kere çalması için
+
+
     void Start()
     {
         // Oyunu normal hızda başlat
@@ -56,6 +62,8 @@ public class PlayerHealth : MonoBehaviour
 
         SetupPostProcess();
         ResetPostProcess();
+
+        jumpscareSource = GetComponent<AudioSource>();
     }
 
     void Update()
@@ -174,6 +182,18 @@ public class PlayerHealth : MonoBehaviour
         {
             Die();
         }
+
+        if (currentHealth <= 0 && !jumpscared)
+        {
+            PlayJumpscare();
+            jumpscared = true;
+        }
+    }
+
+    void PlayJumpscare()
+    {
+        if (jumpscareSource != null && jumpscareClip != null)
+            jumpscareSource.PlayOneShot(jumpscareClip);
     }
 
     void SetupRagdoll()
