@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 913540cccaf209d4cbc2567ddfa77032, type: 3}
   m_Name: SCP_500
   m_EditorClassIdentifier: 
-  price: 200
+  price: 1500
   itemName: Panzehir
   itemValue: 1
   icon: {fileID: 21300000, guid: 0a498e19a6745b1448a369f048543e67, type: 3}
