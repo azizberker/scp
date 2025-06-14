@@ -10,23 +10,23 @@ public class MainMenu : MonoBehaviour
 
     public void Options()
     {
-        Debug.Log("Options tıklandı");
+        Debug.Log("Options tÄ±klandÄ±");
     }
 
     public void Credits()
     {
-        Debug.Log("Credits tıklandı");
+        Debug.Log("Credits tÄ±klandÄ±");
+        SceneManager.LoadScene("Credits"); // â† Sahne ismini buraya yazdÄ±k
     }
 
     public void QuitGame()
     {
-        Application.Quit();
-        Debug.Log("Oyun kapatılıyor..."); // Editör için
-    }
+        Debug.Log("Oyun kapatÄ±lÄ±yor...");
+        Application.Quit(); // âœ… DerlenmiÅŸ oyunda Ã§alÄ±ÅŸÄ±r
 
-    public void TestButton()
-    {
-        Debug.Log("Buton gerçekten çalışıyor!");
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false; // ğŸ¯ EditÃ¶r iÃ§indeysen burasÄ± oyunu durdurur
+#endif
     }
-
 }
+
