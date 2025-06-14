@@ -6,10 +6,6 @@ using TMPro;
 
 public class PlayerHealth : MonoBehaviour
 {
-    [Header("Death Screen UI")]
-    public GameObject deathPanel; // DeathPanel objesi
-    public Button restartButton;  // Restart butonu
-
     [Header("Health Settings")]
     public int maxHealth = 100;
     public int currentHealth;
@@ -20,7 +16,7 @@ public class PlayerHealth : MonoBehaviour
     [Header("Death Effect")]
     public PostProcessVolume postProcessVolume;
     public AudioSource deathSound;
-    public float deathEffectDuration = 0.5f;
+    public float deathEffectDuration = 1f;
     private ColorGrading colorGrading;
     private Vignette vignette;
     private bool isDead = false;
@@ -68,11 +64,6 @@ public class PlayerHealth : MonoBehaviour
         ResetPostProcess();
 
         jumpscareSource = GetComponent<AudioSource>();
-
-        if (deathPanel != null) deathPanel.SetActive(false); // Paneli başta gizle
-
-        if (restartButton != null)
-            restartButton.onClick.AddListener(RestartGame); // Restart’a fonksiyon ata
     }
 
     void Update()
@@ -295,16 +286,6 @@ public class PlayerHealth : MonoBehaviour
     {
         isDead = true;
         isDeathAnimationStarted = false;
-
-        // Paneli göster
-        if (deathPanel != null)
-            deathPanel.SetActive(true);
-
-        Time.timeScale = 0f;
-
-        // FAREYİ GÖRÜNÜR VE SERBEST YAP!
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
     }
 
     System.Collections.IEnumerator DeathSequence()
@@ -313,13 +294,16 @@ public class PlayerHealth : MonoBehaviour
 
         SetupPostProcess();
 
+        // Ses efektini çal
         if (deathSound != null)
+        {
             deathSound.Play();
+        }
 
-        // Oyun dursun
+        // Oyunu dondur ama coroutine'ler çalışsın
         Time.timeScale = 0f;
 
-        // Efektler...
+        // Ekranı karart ve kan efekti ekle
         float elapsedTime = 0f;
         float startExposure = 0f;
         float targetExposure = -5f;
@@ -332,25 +316,26 @@ public class PlayerHealth : MonoBehaviour
         {
             elapsedTime += Time.unscaledDeltaTime;
             float t = elapsedTime / deathEffectDuration;
+
             colorGrading.postExposure.value = Mathf.Lerp(startExposure, targetExposure, t);
             colorGrading.colorFilter.value = Color.Lerp(startColor, endColor, t);
             vignette.intensity.value = Mathf.Lerp(startVignette, targetVignette, t);
+
             yield return null;
         }
 
-        // Otomatik restart yerine panel aç
-        CompleteDeathSequence();
+        // 5 saniye bekle (gerçek zaman)
+        yield return new WaitForSecondsRealtime(5f);
 
-        // Eğer panel yoksa, 5 saniye sonra otomatik restart yap (yedek!)
-        if (deathPanel == null)
-        {
-            yield return new WaitForSecondsRealtime(5f);
-            Time.timeScale = 1f;
-            ResetPostProcess();
-            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-        }
+        // Oyunu yeniden başlatmadan önce timeScale'i geri al
+        Time.timeScale = 1f;
+
+        // Post process'i sıfırla (yüklenen sahnede de güvenlik için)
+        ResetPostProcess();
+
+        // Sahneyi yeniden yükle
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
-
 
     public void Heal(int amount)
     {
@@ -363,15 +348,5 @@ public class PlayerHealth : MonoBehaviour
         currentTempHealth += amount;
         currentTempHealth = Mathf.Clamp(currentTempHealth, 0, maxTempHealth);
         UpdateTempHealthText();
-    }
-
-    public void RestartGame()
-    {
-        Time.timeScale = 1f;
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
-
-        UnityEngine.SceneManagement.SceneManager.LoadScene(
-            UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
     }
 }
