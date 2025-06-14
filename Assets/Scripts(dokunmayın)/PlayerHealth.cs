@@ -20,7 +20,7 @@ public class PlayerHealth : MonoBehaviour
     [Header("Death Effect")]
     public PostProcessVolume postProcessVolume;
     public AudioSource deathSound;
-    public float deathEffectDuration = 1f;
+    public float deathEffectDuration = 0.5f;
     private ColorGrading colorGrading;
     private Vignette vignette;
     private bool isDead = false;
