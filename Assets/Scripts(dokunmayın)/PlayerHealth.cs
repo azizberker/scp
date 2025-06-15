@@ -3,9 +3,15 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.Rendering.PostProcessing;
 using TMPro;
+using System.Collections;
+
 
 public class PlayerHealth : MonoBehaviour
 {
+    [Header("Death Screen UI")]
+    public GameObject deathPanel; // DeathPanel objesi
+    public Button restartButton;  // Restart butonu
+
     [Header("Health Settings")]
     public int maxHealth = 100;
     public int currentHealth;
@@ -40,21 +46,20 @@ public class PlayerHealth : MonoBehaviour
     private AudioSource jumpscareSource; // Kodda bulacağız
     private bool jumpscared = false; // Sadece 1 kere çalması için
 
+    // FADE için ekler
+    private CanvasGroup deathPanelCanvasGroup;
+    public float deathPanelFadeDuration = 1.5f; // Fade süresi
 
     void Start()
     {
-        // Oyunu normal hızda başlat
         Time.timeScale = 1f;
 
         currentHealth = maxHealth;
-        currentTempHealth = maxTempHealth;  // Geçici canı başlangıçta maksimum yap
+        currentTempHealth = maxTempHealth;
 
         if (tempHealthText != null)
-        {
             UpdateTempHealthText();
-        }
 
-        // Kamera ve kontrol bileşenlerini al
         playerCamera = GetComponentInChildren<Camera>();
         playerController = GetComponent<FirstPersonControllerCustom>();
         mouseLook = GetComponentInChildren<MouseLook>();
@@ -64,16 +69,24 @@ public class PlayerHealth : MonoBehaviour
         ResetPostProcess();
 
         jumpscareSource = GetComponent<AudioSource>();
+
+        if (deathPanel != null)
+        {
+            deathPanel.SetActive(false);
+            deathPanelCanvasGroup = deathPanel.GetComponent<CanvasGroup>();
+            if (deathPanelCanvasGroup != null)
+                deathPanelCanvasGroup.alpha = 0f;
+        }
+
+        if (restartButton != null)
+            restartButton.onClick.AddListener(RestartGame);
     }
 
     void Update()
     {
         if (tempHealthText != null)
-        {
             UpdateTempHealthText();
-        }
 
-        // Ölüm animasyonunu güncelle
         if (isDeathAnimationStarted && !isDead)
         {
             deathTimer += Time.deltaTime;
@@ -81,7 +94,6 @@ public class PlayerHealth : MonoBehaviour
 
             if (playerCamera != null)
             {
-                // Kamerayı yavaşça döndür
                 float currentAngle = Mathf.Lerp(0, finalCameraAngle, progress);
                 playerCamera.transform.localRotation = initialRotation * Quaternion.Euler(currentAngle, 0, 0);
             }
@@ -100,7 +112,6 @@ public class PlayerHealth : MonoBehaviour
 
     void SetupPostProcess()
     {
-        // Eğer volume yoksa, runtime'da oluştur
         if (postProcessVolume == null)
         {
             GameObject ppObj = new GameObject("RuntimePostProcessVolume");
@@ -113,7 +124,6 @@ public class PlayerHealth : MonoBehaviour
 
         var profile = postProcessVolume.sharedProfile;
 
-        // ColorGrading ayarla
         if (!profile.TryGetSettings(out colorGrading))
         {
             colorGrading = profile.AddSettings<ColorGrading>();
@@ -123,7 +133,6 @@ public class PlayerHealth : MonoBehaviour
         colorGrading.tint.overrideState = true;
         colorGrading.colorFilter.overrideState = true;
 
-        // Vignette ayarla
         if (!profile.TryGetSettings(out vignette))
         {
             vignette = profile.AddSettings<Vignette>();
@@ -152,7 +161,6 @@ public class PlayerHealth : MonoBehaviour
     {
         if (isDead) return;
 
-        // Önce geçici cana hasar ver
         if (currentTempHealth > 0)
         {
             if (damage <= currentTempHealth)
@@ -168,7 +176,6 @@ public class PlayerHealth : MonoBehaviour
             UpdateTempHealthText();
         }
 
-        // Kalan hasar varsa normal cana ver
         if (damage > 0)
         {
             currentHealth -= damage;
@@ -177,7 +184,6 @@ public class PlayerHealth : MonoBehaviour
 
         Debug.Log("Hasar alındı! Can: " + currentHealth + " Geçici Can: " + currentTempHealth);
 
-        // Can sıfırsa öl
         if (currentHealth <= 0 && !isDead)
         {
             Die();
@@ -198,27 +204,21 @@ public class PlayerHealth : MonoBehaviour
 
     void SetupRagdoll()
     {
-        // CharacterController'ı devre dışı bırak
         if (characterController != null)
-        {
             characterController.enabled = false;
-        }
 
-        // Rigidbody ekle
         if (playerRigidbody == null)
         {
             playerRigidbody = gameObject.AddComponent<Rigidbody>();
-            playerRigidbody.mass = 70f; // Gerçekçi bir kütle
-            playerRigidbody.drag = 1f; // Hava direnci
-            playerRigidbody.angularDrag = 5f; // Dönme direnci
+            playerRigidbody.mass = 70f;
+            playerRigidbody.drag = 1f;
+            playerRigidbody.angularDrag = 5f;
             playerRigidbody.constraints = RigidbodyConstraints.FreezeRotationZ | RigidbodyConstraints.FreezeRotationX;
         }
 
-        // CapsuleCollider ekle (CharacterController yerine)
         if (playerCollider == null)
         {
             playerCollider = gameObject.AddComponent<CapsuleCollider>();
-            // CharacterController'ın boyutlarını kullan
             if (characterController != null)
             {
                 playerCollider.height = characterController.height;
@@ -227,10 +227,8 @@ public class PlayerHealth : MonoBehaviour
             }
         }
 
-        // Düşme kuvveti uygula
         if (playerRigidbody != null)
         {
-            // İleri ve aşağı doğru kuvvet uygula
             Vector3 fallDirection = transform.forward + Vector3.down;
             playerRigidbody.AddForce(fallDirection.normalized * fallForce, ForceMode.Impulse);
         }
@@ -241,44 +239,27 @@ public class PlayerHealth : MonoBehaviour
         if (isDead || isDeathAnimationStarted) return;
         Debug.Log("Oyuncu öldü!");
 
-        // Ölüm animasyonunu başlat
         isDeathAnimationStarted = true;
         deathTimer = 0f;
 
-        // Başlangıç rotasyonunu kaydet
         if (playerCamera != null)
-        {
             initialRotation = playerCamera.transform.localRotation;
-        }
 
-        // Tüm hareket kontrollerini devre dışı bırak
         if (playerController != null)
-        {
             playerController.enabled = false;
-        }
         if (mouseLook != null)
-        {
             mouseLook.enabled = false;
-        }
 
-        // PlayerController'ı bul ve devre dışı bırak
         var playerCtrl = GetComponent<PlayerController>();
         if (playerCtrl != null)
-        {
             playerCtrl.enabled = false;
-        }
 
-        // FirstPersonController'ı bul ve devre dışı bırak
         var firstPersonCtrl = GetComponent<FirstPersonControllerCustom>();
         if (firstPersonCtrl != null)
-        {
             firstPersonCtrl.enabled = false;
-        }
 
-        // Ragdoll fiziğini ayarla
         SetupRagdoll();
 
-        // Post-process efektlerini başlat
         StartCoroutine(DeathSequence());
     }
 
@@ -286,6 +267,31 @@ public class PlayerHealth : MonoBehaviour
     {
         isDead = true;
         isDeathAnimationStarted = false;
+
+        // Fade ile paneli göster
+        if (deathPanel != null && deathPanelCanvasGroup != null)
+            StartCoroutine(FadeInDeathPanel());
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+
+        Time.timeScale = 0f;
+    }
+
+    private IEnumerator FadeInDeathPanel()
+    {
+        deathPanel.SetActive(true);
+        deathPanelCanvasGroup.alpha = 0f;
+
+        float elapsed = 0f;
+        while (elapsed < deathPanelFadeDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(elapsed / deathPanelFadeDuration);
+            deathPanelCanvasGroup.alpha = t;
+            yield return null;
+        }
+        deathPanelCanvasGroup.alpha = 1f;
     }
 
     System.Collections.IEnumerator DeathSequence()
@@ -294,16 +300,9 @@ public class PlayerHealth : MonoBehaviour
 
         SetupPostProcess();
 
-        // Ses efektini çal
         if (deathSound != null)
-        {
             deathSound.Play();
-        }
 
-        // Oyunu dondur ama coroutine'ler çalışsın
-        Time.timeScale = 0f;
-
-        // Ekranı karart ve kan efekti ekle
         float elapsedTime = 0f;
         float startExposure = 0f;
         float targetExposure = -5f;
@@ -316,25 +315,14 @@ public class PlayerHealth : MonoBehaviour
         {
             elapsedTime += Time.unscaledDeltaTime;
             float t = elapsedTime / deathEffectDuration;
-
             colorGrading.postExposure.value = Mathf.Lerp(startExposure, targetExposure, t);
             colorGrading.colorFilter.value = Color.Lerp(startColor, endColor, t);
             vignette.intensity.value = Mathf.Lerp(startVignette, targetVignette, t);
-
             yield return null;
         }
 
-        // 5 saniye bekle (gerçek zaman)
-        yield return new WaitForSecondsRealtime(5f);
-
-        // Oyunu yeniden başlatmadan önce timeScale'i geri al
-        Time.timeScale = 1f;
-
-        // Post process'i sıfırla (yüklenen sahnede de güvenlik için)
-        ResetPostProcess();
-
-        // Sahneyi yeniden yükle
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        // Paneli ve mouse'u aç, oyunu durdur
+        CompleteDeathSequence();
     }
 
     public void Heal(int amount)
@@ -348,5 +336,14 @@ public class PlayerHealth : MonoBehaviour
         currentTempHealth += amount;
         currentTempHealth = Mathf.Clamp(currentTempHealth, 0, maxTempHealth);
         UpdateTempHealthText();
+    }
+
+    public void RestartGame()
+    {
+        Time.timeScale = 1f;
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 }
