@@ -71053,7 +71053,10 @@ RectTransform:
   - {fileID: 366101109}
   - {fileID: 431316746}
   - {fileID: 315789622}
+<<<<<<< HEAD
   - {fileID: 1985707899}
+=======
+>>>>>>> parent of 0f7c90a (DeathPanel)
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
