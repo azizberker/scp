@@ -5133,6 +5133,7 @@ MonoBehaviour:
   finalCameraAngle: 90
   fallForce: 300
   jumpscareClip: {fileID: 8300000, guid: d49cd06b47a10ba43842d1d3fd0ecd93, type: 3}
+  deathPanelFadeDuration: 1.5
 --- !u!82 &131330724
 AudioSource:
   m_ObjectHideFlags: 0
@@ -39575,6 +39576,7 @@ GameObject:
   - component: {fileID: 1034779863}
   - component: {fileID: 1034779865}
   - component: {fileID: 1034779864}
+  - component: {fileID: 1034779866}
   m_Layer: 5
   m_Name: DeathPanel
   m_TagString: Untagged
@@ -39640,6 +39642,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1034779862}
   m_CullTransparentMesh: 1
+--- !u!225 &1034779866
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1034779862}
+  m_Enabled: 1
+  m_Alpha: 0
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &1035862077
 GameObject:
   m_ObjectHideFlags: 0
