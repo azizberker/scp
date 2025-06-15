@@ -2408,7 +2408,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b476e24db97615448bc0ce96bc43b229, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetSceneName: Pist
+  targetSceneName: pist2
   holdDuration: 2
   triggerDistance: 3
 --- !u!43 &90513277

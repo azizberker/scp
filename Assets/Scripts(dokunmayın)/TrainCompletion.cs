@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class TrainCompletion : MonoBehaviour
 {
@@ -13,6 +14,10 @@ public class TrainCompletion : MonoBehaviour
 
     private Transform playerCam;
 
+    public GameObject winPanel;   // Inspector’dan paneli ata
+    public float winScreenDuration = 6f;
+
+
     void Start()
     {
         playerCam = Camera.main.transform;
@@ -23,9 +28,11 @@ public class TrainCompletion : MonoBehaviour
     {
         if (playerCam == null) return;
 
-        // Para kontrolü
-        bool hasSufficientMoney = MoneyBar.Instance != null && MoneyBar.Instance.currentMoney >= 8000;
-        
+        bool isPist2 = SceneManager.GetActiveScene().name == "pist2";
+
+        bool hasSufficientMoney = isPist2 || (MoneyBar.Instance != null && MoneyBar.Instance.currentMoney >= 8000);
+    
+
         Ray ray = new Ray(playerCam.position, playerCam.forward);
         if (Physics.Raycast(ray, out RaycastHit hit, interactionDistance))
         {
@@ -78,9 +85,33 @@ public class TrainCompletion : MonoBehaviour
             ePrompt.SetActive(false);
     }
 
+    
+
     void CompleteGame()
     {
-        Debug.Log("🎮 Oyun tamamlandı! Ana sahneye dönülüyor...");
-        UnityEngine.SceneManagement.SceneManager.LoadScene(menuSceneName);
+        Debug.Log("🎮 Oyun tamamlandı! Kazandınız ekranı gösterilecek.");
+        HidePrompts();
+
+        // Kazandınız panelini göster
+        if (winPanel != null)
+            winPanel.SetActive(true);
+
+        // Mouse'u serbest bırak, oyunu dondur (opsiyonel)
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+        Time.timeScale = 0f;
+
+        // 10 saniye bekleyip ana menüye dön
+        StartCoroutine(WinScreenCoroutine());
     }
-} 
+
+    System.Collections.IEnumerator WinScreenCoroutine()
+    {
+        // Time.timeScale = 0 olduğu için gerçek zamanlı bekle!
+        yield return new WaitForSecondsRealtime(winScreenDuration);
+
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(menuSceneName);
+    }
+
+}

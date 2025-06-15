@@ -57,15 +57,27 @@ public class SceneDoor : MonoBehaviour
     }
 
     void LoadScene()
-{
-    if (!string.IsNullOrEmpty(targetSceneName))
     {
-        Debug.Log("🚪 Sahne geçişi: " + targetSceneName);
-        Time.timeScale = 1f;
-        SceneManager.LoadScene(targetSceneName);
+        // targetSceneName'i tamamen küçük harfe çevir ve boşlukları sil
+        string sceneName = targetSceneName.Trim().ToLower();
 
-        enabled = false; // 🔥 scripti devre dışı bırak, sahne geçince eski obje yok olacak
+        if (sceneName == "pist2")
+        {
+            if (MoneyBar.Instance == null || MoneyBar.Instance.currentMoney < 8000)
+            {
+                Debug.LogWarning("Pist2'ye geçmek için yeterli paran yok!");
+                return;
+            }
+        }
+
+        if (!string.IsNullOrEmpty(targetSceneName))
+        {
+            Debug.Log("🚪 Sahne geçişi: " + targetSceneName);
+            Time.timeScale = 1f;
+            SceneManager.LoadScene(targetSceneName);
+            enabled = false;
+        }
     }
-}
+
 
 }
