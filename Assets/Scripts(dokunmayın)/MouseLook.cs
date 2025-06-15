@@ -2,6 +2,8 @@ using UnityEngine;
 
 public class MouseLook : MonoBehaviour
 {
+    
+
     [Header("Mouse Settings")]
     [Range(0.1f, 10f)]
     public float mouseSensitivity = 2.0f;
@@ -29,6 +31,8 @@ public class MouseLook : MonoBehaviour
 
     private void Update()
     {
+        
+
         HandleMouseInput();
         HandleCursorLock();
     }

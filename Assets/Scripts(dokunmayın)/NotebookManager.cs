@@ -1,62 +1,89 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-
-
-using TMPro; // TMP InputField kullanacaksan
 
 public class NotebookManager : MonoBehaviour
 {
-    public GameObject notebookPanel; // Paneli Inspector’dan atayacaksýn
-    public TMP_InputField notebookInput; // Input Field
+    public GameObject notebookPanel;         // Tüm not paneli objesi
+    public GameObject[] noteImages;          // Inspector’dan sýralý not imgeleri
+    public MonoBehaviour playerMovementScript; // Oyuncu hareket scripti (örn. FirstPersonController)
+    public MonoBehaviour mouseLookScript;      // Mouse bakýþ scripti (ayrýysa)
 
+    private int currentNoteIndex = 0;
     private bool isNotebookOpen = false;
 
     void Start()
     {
-        if (notebookInput != null)
-            notebookInput.text = PlayerPrefs.GetString("NotebookContent", "");
-    }
-
-    void OnDisable()
-    {
-        if (notebookInput != null)
-            PlayerPrefs.SetString("NotebookContent", notebookInput.text);
+        notebookPanel.SetActive(false);
+        foreach (var img in noteImages)
+            img.SetActive(false);
     }
 
     void Update()
     {
-        // N tuþuna basýnca aç/kapat
         if (Input.GetKeyDown(KeyCode.N))
         {
-            isNotebookOpen = !isNotebookOpen;
-            notebookPanel.SetActive(isNotebookOpen);
-
-            // Açýldýðýnda otomatik imleci al
-            if (isNotebookOpen && notebookInput != null)
-                notebookInput.ActivateInputField();
-
-            // Not defteri açýkken mouse ve imleç serbest olsun!
-            if (isNotebookOpen)
+            if (!isNotebookOpen)
             {
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = true;
-                // Oyun duracaksa: Time.timeScale = 0f;
+                OpenNotebook();
             }
             else
             {
-                Cursor.lockState = CursorLockMode.Locked;
-                Cursor.visible = false;
-                // Time.timeScale = 1f;
+                CloseNotebook();
             }
         }
     }
+
+    public void OpenNotebook()
+    {
+        isNotebookOpen = true;
+        notebookPanel.SetActive(true);
+        ShowNote(currentNoteIndex);
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+        Time.timeScale = 0f; // Oyun dursun
+
+        if (playerMovementScript != null)
+            playerMovementScript.enabled = false;
+        if (mouseLookScript != null)
+            mouseLookScript.enabled = false;
+    }
+
     public void CloseNotebook()
     {
         isNotebookOpen = false;
         notebookPanel.SetActive(false);
+        foreach (var img in noteImages)
+            img.SetActive(false);
+
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
-        // Time.timeScale = 1f;
+        Time.timeScale = 1f; // Oyun devam etsin
+
+        if (playerMovementScript != null)
+            playerMovementScript.enabled = true;
+        if (mouseLookScript != null)
+            mouseLookScript.enabled = true;
+    }
+
+    public void NextNote()
+    {
+        currentNoteIndex++;
+        if (currentNoteIndex >= noteImages.Length)
+            currentNoteIndex = 0;
+        ShowNote(currentNoteIndex);
+    }
+
+    public void PrevNote()
+    {
+        currentNoteIndex--;
+        if (currentNoteIndex < 0)
+            currentNoteIndex = noteImages.Length - 1;
+        ShowNote(currentNoteIndex);
+    }
+
+    void ShowNote(int index)
+    {
+        for (int i = 0; i < noteImages.Length; i++)
+            noteImages[i].SetActive(i == index);
     }
 }

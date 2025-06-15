@@ -261,6 +261,11 @@ public class PlayerHealth : MonoBehaviour
         SetupRagdoll();
 
         StartCoroutine(DeathSequence());
+
+        var notebook = FindObjectOfType<NotebookManager>();
+        if (notebook != null)
+            notebook.CloseNotebook();
+
     }
 
     void CompleteDeathSequence()
